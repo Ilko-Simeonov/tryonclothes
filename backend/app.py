@@ -19,6 +19,8 @@ from PIL import Image, ExifTags, UnidentifiedImageError
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.middleware import SlowAPIMiddleware
+from starlette.middleware.proxy_headers import ProxyHeadersMiddleware
+from starlette.middleware.security import SecurityMiddleware
 
 from backend.types import TryOnPayload, TryOnResult
 from backend.providers.fal_nanobanana import try_on_with_fal_nanobanana, FalError
@@ -42,6 +44,15 @@ settings = Settings()
 # ---------------- App & Middleware ----------------
 
 app = FastAPI(title="NanoBanana Try-On (FastAPI)")
+
+# Add security middleware for proper HTTPS handling behind Render's proxy
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+app.add_middleware(
+    SecurityMiddleware,
+    hsts_max_age=31536000,
+    hsts_include_subdomains=True,
+    hsts_preload=True
+)
 
 origins = [o.strip() for o in settings.ALLOWED_ORIGINS.split(",") if o.strip()]
 app.add_middleware(
