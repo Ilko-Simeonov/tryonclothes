@@ -2,7 +2,6 @@
 MIT License — NanoBanana Try-On (FastAPI)
 """
 
-from __future__ import annotations
 import os
 import io
 import secrets
