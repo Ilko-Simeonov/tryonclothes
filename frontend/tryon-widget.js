@@ -2,7 +2,7 @@
 
 const template = document.createElement("template");
 template.innerHTML = `
-  <style>@import url('./styles.css');</style>
+  <style>@import url('https://tryonclothes.onrender.com/frontend/styles.css');</style>
   <button class="tryon-btn" part="button" aria-haspopup="dialog"></button>
 `;
 
