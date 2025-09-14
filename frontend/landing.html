@@ -776,6 +776,23 @@
                             <div class="upload-hint">or drag and drop an image here</div>
                         </div>
                         <input type="file" id="clothing-file-input" accept="image/*" style="display: none;">
+                        
+                        <!-- Sample Photo Option -->
+                        <div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                            <div style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem;">Don't have a photo? Try with our sample:</div>
+                            <button type="button" onclick="useSamplePhoto('clothing')" style="
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                padding: 0.5rem 1rem;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 0.9rem;
+                                transition: background 0.3s ease;
+                            " onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'">
+                                📸 Use Sample Photo
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- Product Selection -->
@@ -841,6 +858,23 @@
                             <div class="upload-hint">or drag and drop an image here</div>
                         </div>
                         <input type="file" id="furniture-file-input" accept="image/*" style="display: none;">
+                        
+                        <!-- Sample Photo Option -->
+                        <div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                            <div style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem;">Don't have a room photo? Try with our sample:</div>
+                            <button type="button" onclick="useSamplePhoto('furniture')" style="
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                padding: 0.5rem 1rem;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 0.9rem;
+                                transition: background 0.3s ease;
+                            " onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'">
+                                🏠 Use Sample Photo
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- Product Selection -->
@@ -906,6 +940,23 @@
                             <div class="upload-hint">or drag and drop an image here</div>
                         </div>
                         <input type="file" id="accessories-file-input" accept="image/*" style="display: none;">
+                        
+                        <!-- Sample Photo Option -->
+                        <div style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                            <div style="color: #666; font-size: 0.9rem; margin-bottom: 0.5rem;">Don't have a photo? Try with our sample:</div>
+                            <button type="button" onclick="useSamplePhoto('accessories')" style="
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                padding: 0.5rem 1rem;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 0.9rem;
+                                transition: background 0.3s ease;
+                            " onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'">
+                                💎 Use Sample Photo
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- Product Selection -->
@@ -1362,20 +1413,36 @@
             // In a real implementation, you might want to process all items
             const firstItem = demoState[category].selectedItems[0];
             
-            // Convert base64 image to file
+            // Handle both base64 data URLs and regular image paths
             const imageData = demoState[category].uploadedImage;
-            const base64Data = imageData.split(',')[1];
-            const byteCharacters = atob(base64Data);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            let file;
+            
+            if (imageData.startsWith('data:')) {
+                // Handle base64 data URL (uploaded file)
+                const base64Data = imageData.split(',')[1];
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                file = new File([byteArray], 'uploaded-image.jpg', { type: 'image/jpeg' });
+            } else {
+                // Handle regular image path (sample photo)
+                // For sample photos, we'll use the image URL directly
+                // The API should handle this case
+                file = imageData;
             }
-            const byteArray = new Uint8Array(byteNumbers);
-            const file = new File([byteArray], 'uploaded-image.jpg', { type: 'image/jpeg' });
             
             // Create form data
             const formData = new FormData();
-            formData.append('person', file);
+            if (typeof file === 'string') {
+                // For sample photos, send the URL
+                formData.append('personUrl', file);
+            } else {
+                // For uploaded files, send the file
+                formData.append('person', file);
+            }
             formData.append('garmentUrl', firstItem.url);
             
             // Make API call
