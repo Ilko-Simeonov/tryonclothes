@@ -6,6 +6,8 @@ import os
 import io
 import secrets
 import asyncio
+import logging
+import httpx
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
@@ -24,6 +26,10 @@ from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from backend.types import TryOnPayload, TryOnResult
 from backend.providers.fal_nanobanana import try_on_with_fal_nanobanana, FalError
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # ---------------- Settings ----------------
 
@@ -128,6 +134,9 @@ async def _ttl_cleaner():
 @app.on_event("startup")
 async def _startup():
     asyncio.create_task(_ttl_cleaner())
+    # Log configuration status
+    logger.info(f"FAL_KEY configured: {bool(settings.FAL_KEY)}")
+    logger.info(f"Allowed origins: {origins}")
 
 # Serve tmp files (publicly fetchable by FAL)
 @app.get("/tmp/{name}")
@@ -142,7 +151,42 @@ def serve_tmp(name: str):
 
 @app.get("/health")
 def health():
-    return {"ok": True}
+    return {
+        "ok": True,
+        "fal_configured": bool(settings.FAL_KEY),
+        "allowed_origins": origins
+    }
+
+@app.get("/test-connectivity")
+async def test_connectivity():
+    """Test network connectivity to external services"""
+    results = {}
+    
+    # Test basic internet connectivity
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get("https://httpbin.org/get")
+            results["internet"] = {"status": "ok", "status_code": response.status_code}
+    except Exception as e:
+        results["internet"] = {"status": "error", "error": str(e)}
+    
+    # Test FAL API connectivity
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get("https://api.fal.ai/health")
+            results["fal_api"] = {"status": "ok", "status_code": response.status_code}
+    except Exception as e:
+        results["fal_api"] = {"status": "error", "error": str(e)}
+    
+    # Test DNS resolution
+    import socket
+    try:
+        socket.gethostbyname("api.fal.ai")
+        results["dns"] = {"status": "ok", "resolved": True}
+    except Exception as e:
+        results["dns"] = {"status": "error", "error": str(e)}
+    
+    return results
 
 @app.post("/api/tryon")
 @limiter.limit("20/minute")
@@ -153,75 +197,104 @@ async def api_tryon(
     category: Optional[str] = Form(None),
     promptExtra: Optional[str] = Form(None),
 ):
-    # Validate file size (FastAPI streams, but we can rely on server/client limits)
-    max_bytes = settings.MAX_UPLOAD_MB * 1024 * 1024
-
-    if person.filename is None:
-        raise HTTPException(status_code=400, detail="Missing 'person' file")
-
-    _basic_guard(person.filename)
-
-    content = await person.read()
-    if len(content) > max_bytes:
-        raise HTTPException(status_code=413, detail="File too large")
-
-    # Validate image, rotate by EXIF, strip EXIF, resize
     try:
-        img = Image.open(io.BytesIO(content))
-        img = img.convert("RGB")
-    except UnidentifiedImageError:
-        raise HTTPException(status_code=400, detail="Unsupported image type")
+        logger.info(f"Try-on request from {request.client.host if request.client else 'unknown'}")
+        
+        # Check if FAL_KEY is configured
+        if not settings.FAL_KEY:
+            logger.error("FAL_KEY not configured")
+            raise HTTPException(status_code=500, detail="Service not properly configured")
+        
+        # Validate file size (FastAPI streams, but we can rely on server/client limits)
+        max_bytes = settings.MAX_UPLOAD_MB * 1024 * 1024
 
-    # Best-effort autorotate
-    try:
-        exif = img.getexif()
-        orient = exif.get(0x0112)  # Orientation
-        if orient == 3:
-            img = img.rotate(180, expand=True)
-        elif orient == 6:
-            img = img.rotate(270, expand=True)
-        elif orient == 8:
-            img = img.rotate(90, expand=True)
-    except Exception:
-        pass
+        if person.filename is None:
+            raise HTTPException(status_code=400, detail="Missing 'person' file")
 
-    img = _strip_exif(img)
-    img = _resize_max(img, 1536)
+        _basic_guard(person.filename)
 
-    buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=92, optimize=True)
-    buf.seek(0)
+        content = await person.read()
+        if len(content) > max_bytes:
+            raise HTTPException(status_code=413, detail="File too large")
 
-    # Save selfie to tmp and expose a public URL so FAL can fetch it
-    name = _random_name("jpg")
-    path = TMP_DIR / name
-    with open(path, "wb") as f:
-        f.write(buf.getvalue())
-    uploaded_index[name] = datetime.utcnow() + timedelta(minutes=settings.DELETE_AFTER_MINUTES)
+        # Validate image, rotate by EXIF, strip EXIF, resize
+        try:
+            img = Image.open(io.BytesIO(content))
+            img = img.convert("RGB")
+        except UnidentifiedImageError:
+            raise HTTPException(status_code=400, detail="Unsupported image type")
+        except Exception as e:
+            logger.error(f"Image processing error: {e}")
+            raise HTTPException(status_code=400, detail="Image processing failed")
 
-    person_url = _public_tmp_url(name)
+        # Best-effort autorotate
+        try:
+            exif = img.getexif()
+            orient = exif.get(0x0112)  # Orientation
+            if orient == 3:
+                img = img.rotate(180, expand=True)
+            elif orient == 6:
+                img = img.rotate(270, expand=True)
+            elif orient == 8:
+                img = img.rotate(90, expand=True)
+        except Exception as e:
+            logger.warning(f"EXIF rotation failed: {e}")
 
-    # Call FAL provider
-    try:
-        progress_logs: list[str] = []
-        url, desc, request_id = await try_on_with_fal_nanobanana(
-            person_url=person_url,
-            garment_url=garmentUrl,
-            category=category,
-            prompt_extra=promptExtra,
-            on_progress=lambda m: progress_logs.append(m),
+        img = _strip_exif(img)
+        img = _resize_max(img, 1536)
+
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=92, optimize=True)
+        buf.seek(0)
+
+        # Save selfie to tmp and expose a public URL so FAL can fetch it
+        name = _random_name("jpg")
+        path = TMP_DIR / name
+        try:
+            with open(path, "wb") as f:
+                f.write(buf.getvalue())
+        except Exception as e:
+            logger.error(f"Failed to save temp file: {e}")
+            raise HTTPException(status_code=500, detail="Failed to process image")
+            
+        uploaded_index[name] = datetime.utcnow() + timedelta(minutes=settings.DELETE_AFTER_MINUTES)
+
+        person_url = _public_tmp_url(name)
+        logger.info(f"Processing try-on with person_url: {person_url}, garment_url: {garmentUrl}")
+
+        # Call FAL provider
+        try:
+            progress_logs: list[str] = []
+            url, desc, request_id = await try_on_with_fal_nanobanana(
+                person_url=person_url,
+                garment_url=garmentUrl,
+                category=category,
+                prompt_extra=promptExtra,
+                on_progress=lambda m: progress_logs.append(m),
+            )
+        except FalError as e:
+            logger.error(f"FAL provider error: {e}")
+            raise HTTPException(status_code=502, detail=f"Upstream failure: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error in FAL provider: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+
+        generated_index[url] = datetime.utcnow() + timedelta(minutes=settings.DELETE_AFTER_MINUTES)
+
+        logger.info(f"Try-on completed successfully, result URL: {url}")
+        return TryOnResult(
+            imageUrl=url,
+            description=desc or "Generated by NanoBanana",
+            requestId=request_id,
+            ttlMinutes=settings.DELETE_AFTER_MINUTES,
         )
-    except FalError as e:
-        raise HTTPException(status_code=502, detail=f"Upstream failure: {e}")
-
-    generated_index[url] = datetime.utcnow() + timedelta(minutes=settings.DELETE_AFTER_MINUTES)
-
-    return TryOnResult(
-        imageUrl=url,
-        description=desc or "Generated by NanoBanana",
-        requestId=request_id,
-        ttlMinutes=settings.DELETE_AFTER_MINUTES,
-    )
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in try-on endpoint: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 # Root page (optional tiny check)
 @app.get("/")
