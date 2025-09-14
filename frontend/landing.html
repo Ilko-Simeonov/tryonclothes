@@ -1415,7 +1415,6 @@
             
             // Handle both base64 data URLs and regular image paths
             const imageData = demoState[category].uploadedImage;
-            let file;
             
             if (imageData.startsWith('data:')) {
                 // Handle base64 data URL (uploaded file)
@@ -1426,25 +1425,43 @@
                     byteNumbers[i] = byteCharacters.charCodeAt(i);
                 }
                 const byteArray = new Uint8Array(byteNumbers);
-                file = new File([byteArray], 'uploaded-image.jpg', { type: 'image/jpeg' });
+                const file = new File([byteArray], 'uploaded-image.jpg', { type: 'image/jpeg' });
+                
+                // Create form data and make API call
+                const formData = new FormData();
+                formData.append('person', file);
+                formData.append('garmentUrl', firstItem.url);
+                
+                makeTryOnRequest(formData, button, category, firstItem);
             } else {
                 // Handle regular image path (sample photo)
-                // For sample photos, we'll use the image URL directly
-                // The API should handle this case
-                file = imageData;
+                // Fetch the image and convert to file
+                fetch(imageData)
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const file = new File([blob], 'sample-image.jpg', { type: 'image/jpeg' });
+                        
+                        // Create form data and make API call
+                        const formData = new FormData();
+                        formData.append('person', file);
+                        formData.append('garmentUrl', firstItem.url);
+                        
+                        makeTryOnRequest(formData, button, category, firstItem);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching sample image:', error);
+                        alert('Error loading sample image. Please try again.');
+                        
+                        // Reset button
+                        button.classList.remove('loading');
+                        button.disabled = false;
+                        updateTryOnButton(category);
+                    });
             }
-            
-            // Create form data
-            const formData = new FormData();
-            if (typeof file === 'string') {
-                // For sample photos, send the URL
-                formData.append('personUrl', file);
-            } else {
-                // For uploaded files, send the file
-                formData.append('person', file);
-            }
-            formData.append('garmentUrl', firstItem.url);
-            
+        }
+
+        // Make the actual API request
+        function makeTryOnRequest(formData, button, category, firstItem) {
             // Make API call
             fetch('https://tryonclothes.onrender.com/api/tryon', {
                 method: 'POST',
