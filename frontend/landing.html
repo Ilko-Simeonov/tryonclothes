@@ -799,19 +799,19 @@
                     <div class="product-grid">
                         <div class="product-card" data-product="shirt" data-category="clothing">
                             <div class="checkmark">✓</div>
-                            <img src="../img/h8s_ts101-gl_1_.jpg" alt="Designer Shirt" class="product-image">
+                            <img src="/img/h8s_ts101-gl_1_.jpg" alt="Designer Shirt" class="product-image">
                             <div class="product-name">Designer Shirt</div>
                             <div class="product-price">$59.99</div>
                         </div>
                         <div class="product-card" data-product="dress" data-category="clothing">
                             <div class="checkmark">✓</div>
-                            <img src="../img/_10_.jpg" alt="Elegant Dress" class="product-image">
+                            <img src="/img/_10_.jpg" alt="Elegant Dress" class="product-image">
                             <div class="product-name">Elegant Dress</div>
                             <div class="product-price">$89.99</div>
                         </div>
                         <div class="product-card" data-product="jacket" data-category="clothing">
                             <div class="checkmark">✓</div>
-                            <img src="../img/dsc_7264_copy_20240226_075346_1.jpg" alt="Casual Jacket" class="product-image">
+                            <img src="/img/dsc_7264_copy_20240226_075346_1.jpg" alt="Casual Jacket" class="product-image">
                             <div class="product-name">Casual Jacket</div>
                             <div class="product-price">$79.99</div>
                         </div>
@@ -1141,18 +1141,18 @@
         const productData = {
             clothing: {
                 shirt: {
-                    url: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400",
-                    name: "Blue Cotton Shirt",
-                    price: "29.99"
+                    url: "/img/h8s_ts101-gl_1_.jpg",
+                    name: "Designer Shirt",
+                    price: "59.99"
                 },
                 dress: {
-                    url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400",
-                    name: "Summer Dress",
-                    price: "49.99"
+                    url: "/img/_10_.jpg",
+                    name: "Elegant Dress",
+                    price: "89.99"
                 },
                 jacket: {
-                    url: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400",
-                    name: "Denim Jacket",
+                    url: "/img/dsc_7264_copy_20240226_075346_1.jpg",
+                    name: "Casual Jacket",
                     price: "79.99"
                 }
             },
@@ -1297,8 +1297,8 @@
         // Use sample photo
         function useSamplePhoto(category) {
             // Set the sample photo as the uploaded image
-            demoState[category].uploadedImage = '../img/boris.png';
-            displayUploadedImage('../img/boris.png', category);
+            demoState[category].uploadedImage = '/img/boris.png';
+            displayUploadedImage('/img/boris.png', category);
             updateTryOnButton(category);
         }
 

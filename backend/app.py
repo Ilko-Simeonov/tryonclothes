@@ -76,10 +76,12 @@ app.add_middleware(SlowAPIMiddleware)
 
 # Static serving
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+IMG_DIR = Path(__file__).resolve().parent.parent / "img"
 TMP_DIR = Path(".tmp")
 TMP_DIR.mkdir(parents=True, exist_ok=True)
 
 app.mount("/frontend", StaticFiles(directory=str(FRONTEND_DIR), html=False), name="frontend")
+app.mount("/img", StaticFiles(directory=str(IMG_DIR), html=False), name="img")
 
 # Track generated URLs and tmp files TTL
 generated_index: dict[str, datetime] = {}
