@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 KIE_API_KEY = os.getenv("KIE_API_KEY", os.getenv("FAL_KEY", ""))
 
 KIE_API_URL = "https://api.kie.ai/api/v1/jobs/createTask"
-KIE_QUERY_URL = "https://api.kie.ai/api/v1/jobs/queryTask"  # Based on the API docs
+KIE_QUERY_URL = "https://api.kie.ai/api/v1/jobs/recordInfo"  # Correct endpoint from docs
 
 class FalError(Exception):
     pass
@@ -90,11 +90,11 @@ async def try_on_with_fal_nanobanana(
             if on_progress:
                 on_progress("Task created, polling for completion...")
             
-            # Poll for completion using the correct GET endpoint
+            # Poll for completion using the correct endpoint
             t0 = time.time()
             while time.time() - t0 < timeout_s:
                 try:
-                    # Use GET method as shown in the API documentation
+                    # Use the correct endpoint: /api/v1/jobs/recordInfo
                     query_url = f"{KIE_QUERY_URL}?taskId={task_id}"
                     logger.info(f"Querying task status: {query_url}")
                     
