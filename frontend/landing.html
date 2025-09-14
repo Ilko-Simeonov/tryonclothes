@@ -248,7 +248,7 @@
             margin-right: 0.5rem;
         }
 
-        /* Product Simulation Styles */
+        /* Enhanced Product Simulation Styles */
         .product-simulation {
             background: #f8f9fa;
             padding: 2rem;
@@ -256,9 +256,91 @@
             text-align: center;
         }
 
+        .demo-instructions {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #1565c0;
+        }
+
+        .demo-instructions strong {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Image Upload Section */
+        .image-upload-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border: 2px dashed #ddd;
+            transition: border-color 0.3s ease;
+        }
+
+        .image-upload-section:hover {
+            border-color: #007bff;
+        }
+
+        .image-upload-section.dragover {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+
+        .upload-area {
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            color: #007bff;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-text {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            margin: 1rem auto;
+            display: block;
+        }
+
+        .uploaded-image-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* Product Grid with Multi-Selection */
         .product-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
@@ -271,6 +353,7 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
             border: 2px solid transparent;
+            position: relative;
         }
 
         .product-card:hover {
@@ -283,9 +366,30 @@
             background: #f0f8ff;
         }
 
+        .product-card .checkmark {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .product-card.selected .checkmark {
+            opacity: 1;
+        }
+
         .product-image {
             width: 100%;
-            height: 150px;
+            height: 120px;
             object-fit: cover;
             border-radius: 6px;
             margin-bottom: 0.5rem;
@@ -304,18 +408,71 @@
             font-weight: 600;
         }
 
-        .demo-instructions {
-            background: #e3f2fd;
+        /* Try-On Controls */
+        .tryon-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .selected-items {
+            background: #e8f5e8;
             padding: 1rem;
             border-radius: 8px;
             margin-bottom: 1rem;
-            font-size: 0.9rem;
-            color: #1565c0;
+            min-height: 50px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
         }
 
-        .demo-instructions strong {
-            display: block;
-            margin-bottom: 0.5rem;
+        .selected-item {
+            background: #007bff;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .selected-item .remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tryon-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            min-width: 150px;
+        }
+
+        .tryon-button:hover {
+            background: #0056b3;
+        }
+
+        .tryon-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .tryon-button.loading {
+            background: #6c757d;
+            position: relative;
+        }
+
+        .tryon-button.loading::after {
+            content: " ⏳";
         }
 
         /* Integration Section */
@@ -575,8 +732,8 @@
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🛒</div>
-                    <h3>Basket System</h3>
-                    <p>Multi-item try-on functionality. Customers can add multiple items to their basket and try them all at once.</p>
+                    <h3>Multi-Item Try-On</h3>
+                    <p>Select multiple items and try them all at once. Perfect for creating complete outfits or room setups.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">💰</div>
@@ -605,35 +762,55 @@
                         <li>Works with any clothing category</li>
                     </ul>
                 </div>
-                <div class="product-simulation">
+                <div class="product-simulation" id="clothing-demo">
                     <div class="demo-instructions">
                         <strong>Try It Yourself:</strong>
-                        Click on any product below, then upload your photo to see how it looks on you!
+                        Upload your photo, select multiple items, then see how they look on you!
                     </div>
+                    
+                    <!-- Image Upload Section -->
+                    <div class="image-upload-section" id="clothing-upload">
+                        <div class="upload-area" onclick="document.getElementById('clothing-file-input').click()">
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">Click to upload your photo</div>
+                            <div class="upload-hint">or drag and drop an image here</div>
+                        </div>
+                        <input type="file" id="clothing-file-input" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <!-- Product Selection -->
                     <div class="product-grid">
-                        <div class="product-card" data-product="shirt">
+                        <div class="product-card" data-product="shirt" data-category="clothing">
+                            <div class="checkmark">✓</div>
                             <img src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=300&fit=crop" alt="Blue Cotton Shirt" class="product-image">
                             <div class="product-name">Blue Cotton Shirt</div>
                             <div class="product-price">$29.99</div>
                         </div>
-                        <div class="product-card" data-product="dress">
+                        <div class="product-card" data-product="dress" data-category="clothing">
+                            <div class="checkmark">✓</div>
                             <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=300&h=300&fit=crop" alt="Summer Dress" class="product-image">
                             <div class="product-name">Summer Dress</div>
                             <div class="product-price">$49.99</div>
                         </div>
-                        <div class="product-card" data-product="jacket">
+                        <div class="product-card" data-product="jacket" data-category="clothing">
+                            <div class="checkmark">✓</div>
                             <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=300&fit=crop" alt="Denim Jacket" class="product-image">
                             <div class="product-name">Denim Jacket</div>
                             <div class="product-price">$79.99</div>
                         </div>
                     </div>
-                    <tryon-button 
-                        id="clothing-tryon"
-                        garment-url="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400" 
-                        garment-name="Blue Cotton Shirt" 
-                        garment-price="29.99"
-                        text="Try This Item">
-                    </tryon-button>
+                    
+                    <!-- Selected Items Display -->
+                    <div class="selected-items" id="clothing-selected">
+                        <span style="color: #666;">No items selected</span>
+                    </div>
+                    
+                    <!-- Try-On Button -->
+                    <div class="tryon-controls">
+                        <button class="tryon-button" id="clothing-tryon-btn" disabled>
+                            Upload Photo First
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -650,35 +827,55 @@
                         <li>Reduce furniture return rates</li>
                     </ul>
                 </div>
-                <div class="product-simulation">
+                <div class="product-simulation" id="furniture-demo">
                     <div class="demo-instructions">
                         <strong>Visualize in Your Space:</strong>
-                        Select a furniture piece, then upload a photo of your room to see how it fits!
+                        Upload a photo of your room, select furniture pieces, then see how they fit!
                     </div>
+                    
+                    <!-- Image Upload Section -->
+                    <div class="image-upload-section" id="furniture-upload">
+                        <div class="upload-area" onclick="document.getElementById('furniture-file-input').click()">
+                            <div class="upload-icon">🏠</div>
+                            <div class="upload-text">Click to upload room photo</div>
+                            <div class="upload-hint">or drag and drop an image here</div>
+                        </div>
+                        <input type="file" id="furniture-file-input" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <!-- Product Selection -->
                     <div class="product-grid">
-                        <div class="product-card" data-product="sofa">
+                        <div class="product-card" data-product="sofa" data-category="furniture">
+                            <div class="checkmark">✓</div>
                             <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=300&h=300&fit=crop" alt="Modern Sofa" class="product-image">
                             <div class="product-name">Modern Sofa</div>
                             <div class="product-price">$899.99</div>
                         </div>
-                        <div class="product-card" data-product="chair">
+                        <div class="product-card" data-product="chair" data-category="furniture">
+                            <div class="checkmark">✓</div>
                             <img src="https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=300&h=300&fit=crop" alt="Accent Chair" class="product-image">
                             <div class="product-name">Accent Chair</div>
                             <div class="product-price">$299.99</div>
                         </div>
-                        <div class="product-card" data-product="table">
+                        <div class="product-card" data-product="table" data-category="furniture">
+                            <div class="checkmark">✓</div>
                             <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=300&h=300&fit=crop" alt="Coffee Table" class="product-image">
                             <div class="product-name">Coffee Table</div>
                             <div class="product-price">$199.99</div>
                         </div>
                     </div>
-                    <tryon-button 
-                        id="furniture-tryon"
-                        garment-url="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400" 
-                        garment-name="Modern Sofa" 
-                        garment-price="899.99"
-                        text="Try This Furniture">
-                    </tryon-button>
+                    
+                    <!-- Selected Items Display -->
+                    <div class="selected-items" id="furniture-selected">
+                        <span style="color: #666;">No items selected</span>
+                    </div>
+                    
+                    <!-- Try-On Button -->
+                    <div class="tryon-controls">
+                        <button class="tryon-button" id="furniture-tryon-btn" disabled>
+                            Upload Room Photo First
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -695,35 +892,55 @@
                         <li>Multiple item combinations</li>
                     </ul>
                 </div>
-                <div class="product-simulation">
+                <div class="product-simulation" id="accessories-demo">
                     <div class="demo-instructions">
                         <strong>Find Your Perfect Match:</strong>
-                        Choose an accessory and upload your photo to see how it complements your style!
+                        Upload your photo, choose accessories, then see how they complement your style!
                     </div>
+                    
+                    <!-- Image Upload Section -->
+                    <div class="image-upload-section" id="accessories-upload">
+                        <div class="upload-area" onclick="document.getElementById('accessories-file-input').click()">
+                            <div class="upload-icon">💎</div>
+                            <div class="upload-text">Click to upload your photo</div>
+                            <div class="upload-hint">or drag and drop an image here</div>
+                        </div>
+                        <input type="file" id="accessories-file-input" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <!-- Product Selection -->
                     <div class="product-grid">
-                        <div class="product-card" data-product="glasses">
+                        <div class="product-card" data-product="glasses" data-category="accessories">
+                            <div class="checkmark">✓</div>
                             <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=300&h=300&fit=crop" alt="Designer Glasses" class="product-image">
                             <div class="product-name">Designer Glasses</div>
                             <div class="product-price">$199.99</div>
                         </div>
-                        <div class="product-card" data-product="watch">
+                        <div class="product-card" data-product="watch" data-category="accessories">
+                            <div class="checkmark">✓</div>
                             <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop" alt="Luxury Watch" class="product-image">
                             <div class="product-name">Luxury Watch</div>
                             <div class="product-price">$599.99</div>
                         </div>
-                        <div class="product-card" data-product="necklace">
+                        <div class="product-card" data-product="necklace" data-category="accessories">
+                            <div class="checkmark">✓</div>
                             <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop" alt="Gold Necklace" class="product-image">
                             <div class="product-name">Gold Necklace</div>
                             <div class="product-price">$149.99</div>
                         </div>
                     </div>
-                    <tryon-button 
-                        id="accessories-tryon"
-                        garment-url="https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400" 
-                        garment-name="Designer Glasses" 
-                        garment-price="199.99"
-                        text="Try This Accessory">
-                    </tryon-button>
+                    
+                    <!-- Selected Items Display -->
+                    <div class="selected-items" id="accessories-selected">
+                        <span style="color: #666;">No items selected</span>
+                    </div>
+                    
+                    <!-- Try-On Button -->
+                    <div class="tryon-controls">
+                        <button class="tryon-button" id="accessories-tryon-btn" disabled>
+                            Upload Photo First
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -774,20 +991,6 @@
   
   <span class="tag">&lt;button</span> <span class="attr">class</span>=<span class="value">"add-to-cart"</span><span class="tag">&gt;</span>Add to Cart<span class="tag">&lt;/button&gt;</span>
 <span class="tag">&lt;/div&gt;</span>
-            </div>
-
-            <h3 style="text-align: center; margin: 2rem 0 1rem; font-size: 1.5rem;">Advanced Features</h3>
-
-            <div class="code-example">
-<span class="comment">&lt;!-- Multi-Item Basket System --&gt;</span>
-<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="value">"https://tryonclothes.onrender.com/frontend/basket-widget.html"</span><span class="tag">&gt;&lt;/script&gt;</span>
-
-<span class="comment">&lt;!-- Custom API Endpoint (Optional) --&gt;</span>
-<span class="tag">&lt;tryon-button</span>
-  <span class="attr">garment-url</span>=<span class="value">"product-image.jpg"</span>
-  <span class="attr">api-endpoint</span>=<span class="value">"https://your-api.com/tryon"</span>
-  <span class="attr">text</span>=<span class="value">"Virtual Try-On"</span><span class="tag">&gt;</span>
-<span class="tag">&lt;/tryon-button&gt;</span>
             </div>
 
             <div style="text-align: center; margin-top: 3rem;">
@@ -882,12 +1085,8 @@
         </div>
     </footer>
 
-    <!-- Include the Try-On Widget -->
-    <script src="https://tryonclothes.onrender.com/frontend/tryon-widget.js"></script>
-    
-    <!-- Product Selection and Try-On Logic -->
+    <!-- Product data for each category -->
     <script>
-        // Product data for each category
         const productData = {
             clothing: {
                 shirt: {
@@ -942,76 +1141,382 @@
             }
         };
 
+        // Global state for each demo
+        const demoState = {
+            clothing: { uploadedImage: null, selectedItems: [] },
+            furniture: { uploadedImage: null, selectedItems: [] },
+            accessories: { uploadedImage: null, selectedItems: [] }
+        };
+
+        // Initialize image upload functionality
+        function initializeImageUpload() {
+            const categories = ['clothing', 'furniture', 'accessories'];
+            
+            categories.forEach(category => {
+                const fileInput = document.getElementById(`${category}-file-input`);
+                const uploadSection = document.getElementById(`${category}-upload`);
+                
+                if (fileInput && uploadSection) {
+                    // File input change handler
+                    fileInput.addEventListener('change', (e) => {
+                        handleImageUpload(e, category);
+                    });
+                    
+                    // Drag and drop handlers
+                    uploadSection.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadSection.classList.add('dragover');
+                    });
+                    
+                    uploadSection.addEventListener('dragleave', () => {
+                        uploadSection.classList.remove('dragover');
+                    });
+                    
+                    uploadSection.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadSection.classList.remove('dragover');
+                        const files = e.dataTransfer.files;
+                        if (files.length > 0) {
+                            handleImageUpload({ target: { files } }, category);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Handle image upload
+        function handleImageUpload(event, category) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                demoState[category].uploadedImage = e.target.result;
+                displayUploadedImage(e.target.result, category);
+                updateTryOnButton(category);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Display uploaded image
+        function displayUploadedImage(imageData, category) {
+            const uploadSection = document.getElementById(`${category}-upload`);
+            const uploadArea = uploadSection.querySelector('.upload-area');
+            
+            // Hide upload area and show image
+            uploadArea.style.display = 'none';
+            
+            // Create image preview
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'uploaded-image-container';
+            imageContainer.innerHTML = `
+                <img src="${imageData}" alt="Uploaded image" class="image-preview">
+                <button class="remove-image" onclick="removeUploadedImage('${category}')">×</button>
+            `;
+            
+            // Remove existing image container if any
+            const existingContainer = uploadSection.querySelector('.uploaded-image-container');
+            if (existingContainer) {
+                existingContainer.remove();
+            }
+            
+            uploadSection.appendChild(imageContainer);
+        }
+
+        // Remove uploaded image
+        function removeUploadedImage(category) {
+            const uploadSection = document.getElementById(`${category}-upload`);
+            const uploadArea = uploadSection.querySelector('.upload-area');
+            const imageContainer = uploadSection.querySelector('.uploaded-image-container');
+            
+            if (imageContainer) {
+                imageContainer.remove();
+            }
+            
+            uploadArea.style.display = 'block';
+            demoState[category].uploadedImage = null;
+            updateTryOnButton(category);
+        }
+
         // Initialize product selection
         function initializeProductSelection() {
-            // Clothing products
-            const clothingProducts = document.querySelectorAll('.use-case:nth-child(1) .product-card');
-            const clothingTryon = document.getElementById('clothing-tryon');
+            const categories = ['clothing', 'furniture', 'accessories'];
             
-            clothingProducts.forEach(card => {
-                card.addEventListener('click', () => {
-                    // Remove selected class from all cards in this section
-                    clothingProducts.forEach(c => c.classList.remove('selected'));
-                    // Add selected class to clicked card
-                    card.classList.add('selected');
-                    
-                    // Update try-on button
-                    const productType = card.dataset.product;
-                    const product = productData.clothing[productType];
-                    updateTryOnButton(clothingTryon, product);
-                });
-            });
-
-            // Furniture products
-            const furnitureProducts = document.querySelectorAll('.use-case:nth-child(2) .product-card');
-            const furnitureTryon = document.getElementById('furniture-tryon');
-            
-            furnitureProducts.forEach(card => {
-                card.addEventListener('click', () => {
-                    furnitureProducts.forEach(c => c.classList.remove('selected'));
-                    card.classList.add('selected');
-                    
-                    const productType = card.dataset.product;
-                    const product = productData.furniture[productType];
-                    updateTryOnButton(furnitureTryon, product);
-                });
-            });
-
-            // Accessories products
-            const accessoriesProducts = document.querySelectorAll('.use-case:nth-child(3) .product-card');
-            const accessoriesTryon = document.getElementById('accessories-tryon');
-            
-            accessoriesProducts.forEach(card => {
-                card.addEventListener('click', () => {
-                    accessoriesProducts.forEach(c => c.classList.remove('selected'));
-                    card.classList.add('selected');
-                    
-                    const productType = card.dataset.product;
-                    const product = productData.accessories[productType];
-                    updateTryOnButton(accessoriesTryon, product);
+            categories.forEach(category => {
+                const productCards = document.querySelectorAll(`[data-category="${category}"]`);
+                
+                productCards.forEach(card => {
+                    card.addEventListener('click', () => {
+                        toggleProductSelection(card, category);
+                    });
                 });
             });
         }
 
-        // Update try-on button with selected product
-        function updateTryOnButton(button, product) {
-            button.setAttribute('garment-url', product.url);
-            button.setAttribute('garment-name', product.name);
-            button.setAttribute('garment-price', product.price);
+        // Toggle product selection
+        function toggleProductSelection(card, category) {
+            const productType = card.dataset.product;
+            const product = productData[category][productType];
             
-            // Update button text based on category
-            if (product.name.includes('Sofa') || product.name.includes('Chair') || product.name.includes('Table')) {
-                button.setAttribute('text', 'Try This Furniture');
-            } else if (product.name.includes('Glasses') || product.name.includes('Watch') || product.name.includes('Necklace')) {
-                button.setAttribute('text', 'Try This Accessory');
+            if (card.classList.contains('selected')) {
+                // Remove from selection
+                card.classList.remove('selected');
+                demoState[category].selectedItems = demoState[category].selectedItems.filter(
+                    item => item.type !== productType
+                );
             } else {
-                button.setAttribute('text', 'Try This Item');
+                // Add to selection
+                card.classList.add('selected');
+                demoState[category].selectedItems.push({
+                    type: productType,
+                    ...product
+                });
             }
             
-            // Refresh the button if the method exists
-            if (button._refresh && typeof button._refresh === 'function') {
-                button._refresh();
+            updateSelectedItemsDisplay(category);
+            updateTryOnButton(category);
+        }
+
+        // Update selected items display
+        function updateSelectedItemsDisplay(category) {
+            const selectedContainer = document.getElementById(`${category}-selected`);
+            const selectedItems = demoState[category].selectedItems;
+            
+            if (selectedItems.length === 0) {
+                selectedContainer.innerHTML = '<span style="color: #666;">No items selected</span>';
+            } else {
+                selectedContainer.innerHTML = selectedItems.map(item => `
+                    <div class="selected-item">
+                        ${item.name}
+                        <span class="remove" onclick="removeSelectedItem('${category}', '${item.type}')">×</span>
+                    </div>
+                `).join('');
             }
+        }
+
+        // Remove selected item
+        function removeSelectedItem(category, productType) {
+            // Remove from state
+            demoState[category].selectedItems = demoState[category].selectedItems.filter(
+                item => item.type !== productType
+            );
+            
+            // Remove visual selection
+            const card = document.querySelector(`[data-category="${category}"][data-product="${productType}"]`);
+            if (card) {
+                card.classList.remove('selected');
+            }
+            
+            updateSelectedItemsDisplay(category);
+            updateTryOnButton(category);
+        }
+
+        // Update try-on button state
+        function updateTryOnButton(category) {
+            const button = document.getElementById(`${category}-tryon-btn`);
+            const hasImage = demoState[category].uploadedImage !== null;
+            const hasItems = demoState[category].selectedItems.length > 0;
+            
+            if (!hasImage) {
+                button.disabled = true;
+                button.textContent = 'Upload Photo First';
+            } else if (!hasItems) {
+                button.disabled = true;
+                button.textContent = 'Select Items First';
+            } else {
+                button.disabled = false;
+                const itemCount = demoState[category].selectedItems.length;
+                button.textContent = `Try On ${itemCount} Item${itemCount > 1 ? 's' : ''}`;
+            }
+        }
+
+        // Handle try-on button click
+        function handleTryOn(category) {
+            const button = document.getElementById(`${category}-tryon-btn`);
+            const hasImage = demoState[category].uploadedImage !== null;
+            const hasItems = demoState[category].selectedItems.length > 0;
+            
+            if (!hasImage || !hasItems) {
+                return;
+            }
+            
+            // Set loading state
+            button.classList.add('loading');
+            button.disabled = true;
+            button.textContent = 'Processing...';
+            
+            // For demo purposes, we'll process the first selected item
+            // In a real implementation, you might want to process all items
+            const firstItem = demoState[category].selectedItems[0];
+            
+            // Convert base64 image to file
+            const imageData = demoState[category].uploadedImage;
+            const base64Data = imageData.split(',')[1];
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const file = new File([byteArray], 'uploaded-image.jpg', { type: 'image/jpeg' });
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('person', file);
+            formData.append('garmentUrl', firstItem.url);
+            
+            // Make API call
+            fetch('https://tryonclothes.onrender.com/api/tryon', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                // Show result
+                showTryOnResult(result.imageUrl, category, firstItem);
+                
+                // Reset button
+                button.classList.remove('loading');
+                button.disabled = false;
+                updateTryOnButton(category);
+            })
+            .catch(error => {
+                console.error('Try-on error:', error);
+                alert('Error processing try-on. Please try again.');
+                
+                // Reset button
+                button.classList.remove('loading');
+                button.disabled = false;
+                updateTryOnButton(category);
+            });
+        }
+
+        // Show try-on result
+        function showTryOnResult(imageUrl, category, item) {
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+            
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white;
+                padding: 2rem;
+                border-radius: 12px;
+                max-width: 90%;
+                max-height: 90%;
+                text-align: center;
+                position: relative;
+            `;
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 15px;
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: #666;
+            `;
+            
+            const title = document.createElement('h3');
+            title.textContent = `Try-On Result: ${item.name}`;
+            title.style.cssText = `
+                margin-bottom: 1rem;
+                color: #333;
+            `;
+            
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.style.cssText = `
+                max-width: 100%;
+                max-height: 70vh;
+                border-radius: 8px;
+                margin-bottom: 1rem;
+            `;
+            
+            const actions = document.createElement('div');
+            actions.style.cssText = `
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+                margin-top: 1rem;
+            `;
+            
+            const tryAnotherBtn = document.createElement('button');
+            tryAnotherBtn.textContent = 'Try Another Item';
+            tryAnotherBtn.style.cssText = `
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 6px;
+                cursor: pointer;
+            `;
+            
+            const closeModalBtn = document.createElement('button');
+            closeModalBtn.textContent = 'Close';
+            closeModalBtn.style.cssText = `
+                background: #6c757d;
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 6px;
+                cursor: pointer;
+            `;
+            
+            // Event handlers
+            const closeModal = () => {
+                document.body.removeChild(modal);
+            };
+            
+            closeBtn.onclick = closeModal;
+            closeModalBtn.onclick = closeModal;
+            tryAnotherBtn.onclick = () => {
+                closeModal();
+                // Scroll to the demo section
+                document.getElementById(`${category}-demo`).scrollIntoView({ behavior: 'smooth' });
+            };
+            
+            // Close on background click
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            };
+            
+            // Assemble modal
+            actions.appendChild(tryAnotherBtn);
+            actions.appendChild(closeModalBtn);
+            content.appendChild(closeBtn);
+            content.appendChild(title);
+            content.appendChild(img);
+            content.appendChild(actions);
+            modal.appendChild(content);
+            document.body.appendChild(modal);
         }
 
         // Smooth scrolling
@@ -1044,41 +1549,17 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM Content Loaded');
             
-            // Check if custom elements are defined
-            console.log('Custom elements defined:', customElements.get('tryon-button'));
+            // Initialize all functionality
+            initializeImageUpload();
+            initializeProductSelection();
             
-            // Wait a bit for custom elements to be defined
-            setTimeout(() => {
-                console.log('Initializing product selection...');
-                
-                // Check if try-on buttons exist
-                const tryonButtons = document.querySelectorAll('tryon-button');
-                console.log('Found try-on buttons:', tryonButtons.length);
-                
-                tryonButtons.forEach((btn, index) => {
-                    console.log(`Button ${index}:`, btn);
-                    console.log(`Button ${index} shadowRoot:`, btn.shadowRoot);
-                });
-                
-                initializeProductSelection();
-                
-                // Set default selections
-                const shirtCard = document.querySelector('.use-case:nth-child(1) .product-card[data-product="shirt"]');
-                const sofaCard = document.querySelector('.use-case:nth-child(2) .product-card[data-product="sofa"]');
-                const glassesCard = document.querySelector('.use-case:nth-child(3) .product-card[data-product="glasses"]');
-                
-                if (shirtCard) shirtCard.classList.add('selected');
-                if (sofaCard) sofaCard.classList.add('selected');
-                if (glassesCard) glassesCard.classList.add('selected');
-                
-                // Force refresh all try-on buttons
-                tryonButtons.forEach(btn => {
-                    if (btn._refresh && typeof btn._refresh === 'function') {
-                        btn._refresh();
-                    }
-                });
-            }, 500); // Increased timeout
+            // Add click handlers to try-on buttons
+            document.getElementById('clothing-tryon-btn').addEventListener('click', () => handleTryOn('clothing'));
+            document.getElementById('furniture-tryon-btn').addEventListener('click', () => handleTryOn('furniture'));
+            document.getElementById('accessories-tryon-btn').addEventListener('click', () => handleTryOn('accessories'));
+            
+            console.log('Landing page initialized successfully');
         });
     </script>
 </body>
-</html> 
+</html>
