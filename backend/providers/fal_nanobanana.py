@@ -1,18 +1,25 @@
 """
-MIT License — NanoBanana Try-On provider (FAL)
-Uses FAL's REST run API for the model "fal-ai/nano-banana/edit".
-We provide generic polling. Adjust if your FAL plan exposes a different schema.
+MIT License — Try-On provider (FAL)
+Uses FAL's REST run API for virtual try-on models.
 """
 
 from __future__ import annotations
 import os
 import time
 import httpx
+import logging
 from typing import Dict, Any, Optional, Tuple, Callable
+
+logger = logging.getLogger(__name__)
 
 FAL_KEY = os.getenv("FAL_KEY", "")
 
-FAL_RUN_URL = "https://api.fal.ai/v1/run/fal-ai/nano-banana/edit"
+# Try different API endpoints and models
+FAL_ENDPOINTS = [
+    "https://api.fal.ai/v1/run/google/nano-banana-edit",  # Based on the API docs
+    "https://api.fal.ai/v1/run/fal-ai/nano-banana/edit",  # Original endpoint
+    "https://api.fal.ai/v1/run/fal-ai/fashn/tryon/v1.5",  # Alternative try-on model
+]
 
 class FalError(Exception):
     pass
@@ -45,61 +52,136 @@ async def try_on_with_fal_nanobanana(
         "Content-Type": "application/json",
     }
 
-    payload = {
-        "input": {
-            "prompt": build_prompt(category, prompt_extra),
-            "image_urls": [person_url, garment_url],
-            "output_format": "jpeg",
-            "num_images": 1,
-        }
-    }
+    # Try different endpoints until one works
+    last_error = None
+    for endpoint in FAL_ENDPOINTS:
+        try:
+            logger.info(f"Trying endpoint: {endpoint}")
+            
+            # Build payload based on endpoint
+            if "nano-banana" in endpoint:
+                # Nano-banana model payload (based on API docs)
+                payload = {
+                    "model": "google/nano-banana-edit",
+                    "input": {
+                        "image_urls": [person_url, garment_url],
+                        "prompt": build_prompt(category, prompt_extra),
+                    }
+                }
+            elif "fashn" in endpoint:
+                # FASHN model payload
+                payload = {
+                    "input": {
+                        "person_image_url": person_url,
+                        "garment_image_url": garment_url,
+                        "category": category or "top",
+                        "prompt": build_prompt(category, prompt_extra),
+                    }
+                }
+            else:
+                # Generic payload
+                payload = {
+                    "input": {
+                        "prompt": build_prompt(category, prompt_extra),
+                        "image_urls": [person_url, garment_url],
+                        "output_format": "jpeg",
+                        "num_images": 1,
+                    }
+                }
 
-    async with httpx.AsyncClient(timeout=timeout_s) as client:
-        r = await client.post(FAL_RUN_URL, headers=headers, json=payload)
-        if r.status_code >= 400:
-            raise FalError(f"FAL run failed: {r.status_code} {r.text}")
+            logger.info(f"Making request to: {endpoint}")
+            logger.info(f"Payload: {payload}")
 
-        data = r.json()
-        # Best effort: either immediate image list or a request we need to poll.
-        images = (data.get("images") or data.get("data", {}).get("images")) or []
-        description = data.get("description") or data.get("data", {}).get("description") or ""
-        request_id = data.get("request_id") or data.get("requestId") or data.get("request", {}).get("id") or "unknown"
+            async with httpx.AsyncClient(timeout=timeout_s) as client:
+                r = await client.post(endpoint, headers=headers, json=payload)
+                logger.info(f"Response status: {r.status_code}")
+                
+                if r.status_code >= 400:
+                    logger.error(f"API error response: {r.text}")
+                    last_error = f"Endpoint {endpoint} failed: {r.status_code} {r.text}"
+                    continue
 
-        if images:
-            first = images[0]
-            url = first.get("url")
-            if not url:
-                raise FalError("FAL response had no image url")
-            return (url, description, request_id)
+                data = r.json()
+                logger.info(f"Response data: {data}")
+                
+                # Parse response
+                images = []
+                if "images" in data:
+                    images = data["images"]
+                elif "data" in data and "images" in data["data"]:
+                    images = data["data"]["images"]
+                elif "output" in data and "images" in data["output"]:
+                    images = data["output"]["images"]
+                
+                if images:
+                    first = images[0]
+                    url = first.get("url")
+                    if not url:
+                        last_error = f"Endpoint {endpoint} response had no image url"
+                        continue
+                    
+                    description = data.get("description") or data.get("data", {}).get("description") or ""
+                    request_id = data.get("request_id") or data.get("requestId") or data.get("request", {}).get("id") or "unknown"
+                    
+                    logger.info(f"Success with endpoint {endpoint}, result URL: {url}")
+                    return (url, description, request_id)
+                
+                # If no images, try polling
+                status_url = data.get("status_url") or data.get("request", {}).get("status_url")
+                if status_url:
+                    logger.info(f"Polling status URL: {status_url}")
+                    t0 = time.time()
+                    while time.time() - t0 < timeout_s:
+                        try:
+                            async with httpx.AsyncClient(timeout=30.0) as client:
+                                sr = await client.get(status_url, headers=headers)
+                                if sr.status_code >= 400:
+                                    last_error = f"Status check failed: {sr.status_code} {sr.text}"
+                                    break
+                                sd = sr.json()
 
-        # If the provider returns a status URL, poll it (schema may differ; this is a generic fallback).
-        status_url = data.get("status_url") or data.get("request", {}).get("status_url")
-        if not status_url:
-            # Some variants return a queue + stream log endpoint. Without it, we can only fail gracefully.
-            raise FalError("FAL did not return images or a status_url; adjust provider integration")
+                                if on_progress:
+                                    for log in (sd.get("logs") or []):
+                                        msg = log.get("message")
+                                        if msg:
+                                            on_progress(msg)
 
-        t0 = time.time()
-        while time.time() - t0 < timeout_s:
-            sr = await client.get(status_url, headers=headers)
-            if sr.status_code >= 400:
-                raise FalError(f"FAL status failed: {sr.status_code} {sr.text}")
-            sd = sr.json()
+                                images = sd.get("images") or sd.get("data", {}).get("images") or []
+                                
+                                if images:
+                                    url = images[0].get("url")
+                                    if not url:
+                                        last_error = f"Status response had no image url"
+                                        break
+                                    description = sd.get("description") or sd.get("data", {}).get("description") or description
+                                    request_id = sd.get("request_id") or sd.get("requestId") or sd.get("request", {}).get("id") or request_id
+                                    logger.info(f"Success with endpoint {endpoint} after polling, result URL: {url}")
+                                    return (url, description or "", request_id)
 
-            if on_progress:
-                for log in (sd.get("logs") or []):
-                    msg = log.get("message")
-                    if msg:
-                        on_progress(msg)
+                                time.sleep(1.0)
+                        except Exception as e:
+                            logger.error(f"Error polling status: {e}")
+                            last_error = f"Error polling status: {e}"
+                            break
+                    else:
+                        last_error = f"Endpoint {endpoint} polling timed out"
+                        continue
+                else:
+                    last_error = f"Endpoint {endpoint} did not return images or status_url"
+                    continue
+                    
+        except httpx.ConnectError as e:
+            logger.error(f"Connection error to {endpoint}: {e}")
+            last_error = f"Failed to connect to {endpoint}: {e}"
+            continue
+        except httpx.TimeoutException as e:
+            logger.error(f"Timeout error to {endpoint}: {e}")
+            last_error = f"Timeout connecting to {endpoint}: {e}"
+            continue
+        except Exception as e:
+            logger.error(f"Unexpected error with {endpoint}: {e}")
+            last_error = f"Unexpected error with {endpoint}: {e}"
+            continue
 
-            images = (sd.get("images") or sd.get("data", {}).get("images")) or []
-            description = sd.get("description") or sd.get("data", {}).get("description") or description
-
-            if images:
-                url = images[0].get("url")
-                if not url:
-                    raise FalError("FAL status response had no image url")
-                return (url, description or "", request_id)
-
-            time.sleep(1.0)
-
-        raise FalError("FAL polling timed out")
+    # If we get here, all endpoints failed
+    raise FalError(f"All FAL endpoints failed. Last error: {last_error}")
