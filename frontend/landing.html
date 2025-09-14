@@ -1409,13 +1409,32 @@
             button.disabled = true;
             button.textContent = 'Processing...';
             
-            // For demo purposes, we'll process the first selected item
-            // In a real implementation, you might want to process all items
-            const firstItem = demoState[category].selectedItems[0];
-            
-            // Handle both base64 data URLs and regular image paths
+            const selectedItems = demoState[category].selectedItems;
             const imageData = demoState[category].uploadedImage;
             
+            // Process items sequentially
+            processItemsSequentially(selectedItems, imageData, button, category, 0);
+        }
+
+        // Process items one by one
+        function processItemsSequentially(items, imageData, button, category, index) {
+            if (index >= items.length) {
+                // All items processed
+                button.classList.remove('loading');
+                button.disabled = false;
+                updateTryOnButton(category);
+                return;
+            }
+            
+            const currentItem = items[index];
+            button.textContent = `Processing ${index + 1}/${items.length}: ${currentItem.name}...`;
+            
+            // Process current item
+            processSingleItem(imageData, currentItem, button, category, items, index);
+        }
+
+        // Process a single item
+        function processSingleItem(imageData, item, button, category, allItems, currentIndex) {
             if (imageData.startsWith('data:')) {
                 // Handle base64 data URL (uploaded file)
                 const base64Data = imageData.split(',')[1];
@@ -1430,12 +1449,11 @@
                 // Create form data and make API call
                 const formData = new FormData();
                 formData.append('person', file);
-                formData.append('garmentUrl', firstItem.url);
+                formData.append('garmentUrl', item.url);
                 
-                makeTryOnRequest(formData, button, category, firstItem);
+                makeTryOnRequest(formData, button, category, item, allItems, currentIndex);
             } else {
                 // Handle regular image path (sample photo)
-                // Fetch the image and convert to file
                 fetch(imageData)
                     .then(response => response.blob())
                     .then(blob => {
@@ -1444,9 +1462,9 @@
                         // Create form data and make API call
                         const formData = new FormData();
                         formData.append('person', file);
-                        formData.append('garmentUrl', firstItem.url);
+                        formData.append('garmentUrl', item.url);
                         
-                        makeTryOnRequest(formData, button, category, firstItem);
+                        makeTryOnRequest(formData, button, category, item, allItems, currentIndex);
                     })
                     .catch(error => {
                         console.error('Error fetching sample image:', error);
@@ -1461,7 +1479,7 @@
         }
 
         // Make the actual API request
-        function makeTryOnRequest(formData, button, category, firstItem) {
+        function makeTryOnRequest(formData, button, category, item, allItems, currentIndex) {
             // Make API call
             fetch('https://tryonclothes.onrender.com/api/tryon', {
                 method: 'POST',
@@ -1474,17 +1492,16 @@
                 return response.json();
             })
             .then(result => {
-                // Show result
-                showTryOnResult(result.imageUrl, category, firstItem);
+                // Show result for this item
+                showTryOnResult(result.imageUrl, category, item, currentIndex + 1, allItems.length);
                 
-                // Reset button
-                button.classList.remove('loading');
-                button.disabled = false;
-                updateTryOnButton(category);
+                // Process next item
+                const imageData = demoState[category].uploadedImage;
+                processItemsSequentially(allItems, imageData, button, category, currentIndex + 1);
             })
             .catch(error => {
                 console.error('Try-on error:', error);
-                alert('Error processing try-on. Please try again.');
+                alert(`Error processing ${item.name}. Please try again.`);
                 
                 // Reset button
                 button.classList.remove('loading');
@@ -1493,8 +1510,8 @@
             });
         }
 
-        // Show try-on result
-        function showTryOnResult(imageUrl, category, item) {
+        // Show try-on result (updated to show item number)
+        function showTryOnResult(imageUrl, category, item, itemNumber, totalItems) {
             // Create modal
             const modal = document.createElement('div');
             modal.style.cssText = `
@@ -1535,7 +1552,7 @@
             `;
             
             const title = document.createElement('h3');
-            title.textContent = `Try-On Result: ${item.name}`;
+            title.textContent = `Try-On Result ${itemNumber}/${totalItems}: ${item.name}`;
             title.style.cssText = `
                 margin-bottom: 1rem;
                 color: #333;
@@ -1558,9 +1575,9 @@
                 margin-top: 1rem;
             `;
             
-            const tryAnotherBtn = document.createElement('button');
-            tryAnotherBtn.textContent = 'Try Another Item';
-            tryAnotherBtn.style.cssText = `
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = itemNumber < totalItems ? 'Next Item' : 'Done';
+            nextBtn.style.cssText = `
                 background: #007bff;
                 color: white;
                 border: none;
@@ -1587,10 +1604,15 @@
             
             closeBtn.onclick = closeModal;
             closeModalBtn.onclick = closeModal;
-            tryAnotherBtn.onclick = () => {
+            nextBtn.onclick = () => {
                 closeModal();
-                // Scroll to the demo section
-                document.getElementById(`${category}-demo`).scrollIntoView({ behavior: 'smooth' });
+                if (itemNumber < totalItems) {
+                    // Continue to next item (this will be handled by the sequential processing)
+                    // The modal will close and the next item will be processed automatically
+                } else {
+                    // All items processed, scroll to demo section
+                    document.getElementById(`${category}-demo`).scrollIntoView({ behavior: 'smooth' });
+                }
             };
             
             // Close on background click
@@ -1601,7 +1623,7 @@
             };
             
             // Assemble modal
-            actions.appendChild(tryAnotherBtn);
+            actions.appendChild(nextBtn);
             actions.appendChild(closeModalBtn);
             content.appendChild(closeBtn);
             content.appendChild(title);
