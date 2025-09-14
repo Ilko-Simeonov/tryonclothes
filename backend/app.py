@@ -188,6 +188,61 @@ async def test_connectivity():
     
     return results
 
+@app.get("/diagnose")
+async def diagnose():
+    """Comprehensive diagnostic information"""
+    import os
+    import socket
+    import platform
+    
+    results = {
+        "environment": {},
+        "network": {},
+        "dns": {},
+        "render_info": {}
+    }
+    
+    # Environment variables
+    results["environment"] = {
+        "FAL_KEY_set": bool(os.getenv("FAL_KEY")),
+        "FAL_KEY_length": len(os.getenv("FAL_KEY", "")),
+        "RENDER": os.getenv("RENDER", "false"),
+        "PORT": os.getenv("PORT", "not_set"),
+        "PYTHON_VERSION": platform.python_version(),
+        "PLATFORM": platform.platform()
+    }
+    
+    # Network information
+    try:
+        hostname = socket.gethostname()
+        results["network"]["hostname"] = hostname
+        results["network"]["local_ip"] = socket.gethostbyname(hostname)
+    except Exception as e:
+        results["network"]["error"] = str(e)
+    
+    # DNS tests
+    dns_hosts = ["api.fal.ai", "google.com", "cloudflare.com", "render.com"]
+    for host in dns_hosts:
+        try:
+            ip = socket.gethostbyname(host)
+            results["dns"][host] = {"status": "ok", "ip": ip}
+        except Exception as e:
+            results["dns"][host] = {"status": "error", "error": str(e)}
+    
+    # Render-specific environment variables
+    render_vars = [
+        "RENDER", "RENDER_EXTERNAL_URL", "RENDER_EXTERNAL_HOSTNAME",
+        "RENDER_SERVICE_ID", "RENDER_SERVICE_NAME", "RENDER_SERVICE_TYPE",
+        "RENDER_GIT_BRANCH", "RENDER_GIT_COMMIT", "RENDER_GIT_REPO_SLUG"
+    ]
+    
+    for var in render_vars:
+        value = os.getenv(var)
+        if value:
+            results["render_info"][var] = value
+    
+    return results
+
 @app.post("/api/tryon")
 @limiter.limit("20/minute")
 async def api_tryon(
