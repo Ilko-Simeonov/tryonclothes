@@ -37,7 +37,8 @@ class Settings(BaseSettings):
     PORT: int = 8787
     PUBLIC_BASE_URL: str = "https://tryonclothes.onrender.com"
     ALLOWED_ORIGINS: str = "https://sparkvision.tech"
-    FAL_KEY: str = ""
+    FAL_KEY: str = ""  # Keep for backward compatibility
+    KIE_API_KEY: str = ""  # New Kie.ai API key
     MAX_UPLOAD_MB: int = 10
     DELETE_AFTER_MINUTES: int = 60
 

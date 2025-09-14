@@ -1,6 +1,6 @@
 """
-MIT License — Try-On provider (FAL)
-Uses FAL's REST run API for virtual try-on models.
+MIT License — Try-On provider (Kie.ai)
+Uses Kie.ai's REST API for the Nano Banana model.
 """
 
 from __future__ import annotations
@@ -8,18 +8,17 @@ import os
 import time
 import httpx
 import logging
+import json
 from typing import Dict, Any, Optional, Tuple, Callable
+import asyncio
 
 logger = logging.getLogger(__name__)
 
-FAL_KEY = os.getenv("FAL_KEY", "")
+# Use Kie.ai API key instead of FAL_KEY
+KIE_API_KEY = os.getenv("KIE_API_KEY", os.getenv("FAL_KEY", ""))
 
-# Try different API endpoints and models
-FAL_ENDPOINTS = [
-    "https://api.fal.ai/v1/run/google/nano-banana-edit",  # Based on the API docs
-    "https://api.fal.ai/v1/run/fal-ai/nano-banana/edit",  # Original endpoint
-    "https://api.fal.ai/v1/run/fal-ai/fashn/tryon/v1.5",  # Alternative try-on model
-]
+KIE_API_URL = "https://api.kie.ai/api/v1/jobs/createTask"
+KIE_QUERY_URL = "https://api.kie.ai/api/v1/jobs/queryTask"
 
 class FalError(Exception):
     pass
@@ -44,144 +43,110 @@ async def try_on_with_fal_nanobanana(
     on_progress: Optional[Callable[[str], None]] = None,
     timeout_s: int = 120,
 ) -> Tuple[str, str, str]:
-    if not FAL_KEY:
-        raise FalError("FAL_KEY not configured")
+    if not KIE_API_KEY:
+        raise FalError("KIE_API_KEY not configured")
 
     headers = {
-        "Authorization": f"Bearer {FAL_KEY}",
+        "Authorization": f"Bearer {KIE_API_KEY}",
         "Content-Type": "application/json",
     }
 
-    # Try different endpoints until one works
-    last_error = None
-    for endpoint in FAL_ENDPOINTS:
-        try:
-            logger.info(f"Trying endpoint: {endpoint}")
+    # Build payload for Kie.ai API
+    payload = {
+        "model": "google/nano-banana-edit",
+        "input": {
+            "prompt": build_prompt(category, prompt_extra),
+            "image_urls": [person_url, garment_url],
+            "output_format": "jpeg",
+            "image_size": "auto"
+        }
+    }
+
+    logger.info(f"Making request to Kie.ai API: {KIE_API_URL}")
+    logger.info(f"Payload: {payload}")
+
+    try:
+        async with httpx.AsyncClient(timeout=timeout_s) as client:
+            # Create task
+            r = await client.post(KIE_API_URL, headers=headers, json=payload)
+            logger.info(f"Kie.ai API response status: {r.status_code}")
             
-            # Build payload based on endpoint
-            if "nano-banana" in endpoint:
-                # Nano-banana model payload (based on API docs)
-                payload = {
-                    "model": "google/nano-banana-edit",
-                    "input": {
-                        "image_urls": [person_url, garment_url],
-                        "prompt": build_prompt(category, prompt_extra),
-                    }
-                }
-            elif "fashn" in endpoint:
-                # FASHN model payload
-                payload = {
-                    "input": {
-                        "person_image_url": person_url,
-                        "garment_image_url": garment_url,
-                        "category": category or "top",
-                        "prompt": build_prompt(category, prompt_extra),
-                    }
-                }
-            else:
-                # Generic payload
-                payload = {
-                    "input": {
-                        "prompt": build_prompt(category, prompt_extra),
-                        "image_urls": [person_url, garment_url],
-                        "output_format": "jpeg",
-                        "num_images": 1,
-                    }
-                }
+            if r.status_code >= 400:
+                logger.error(f"Kie.ai API error response: {r.text}")
+                raise FalError(f"Kie.ai API failed: {r.status_code} {r.text}")
 
-            logger.info(f"Making request to: {endpoint}")
-            logger.info(f"Payload: {payload}")
-
-            async with httpx.AsyncClient(timeout=timeout_s) as client:
-                r = await client.post(endpoint, headers=headers, json=payload)
-                logger.info(f"Response status: {r.status_code}")
-                
-                if r.status_code >= 400:
-                    logger.error(f"API error response: {r.text}")
-                    last_error = f"Endpoint {endpoint} failed: {r.status_code} {r.text}"
-                    continue
-
-                data = r.json()
-                logger.info(f"Response data: {data}")
-                
-                # Parse response
-                images = []
-                if "images" in data:
-                    images = data["images"]
-                elif "data" in data and "images" in data["data"]:
-                    images = data["data"]["images"]
-                elif "output" in data and "images" in data["output"]:
-                    images = data["output"]["images"]
-                
-                if images:
-                    first = images[0]
-                    url = first.get("url")
-                    if not url:
-                        last_error = f"Endpoint {endpoint} response had no image url"
-                        continue
+            data = r.json()
+            logger.info(f"Kie.ai API response data: {data}")
+            
+            if data.get("code") != 200:
+                raise FalError(f"Kie.ai API error: {data.get('message', 'Unknown error')}")
+            
+            task_id = data.get("data", {}).get("taskId")
+            if not task_id:
+                raise FalError("Kie.ai API did not return task ID")
+            
+            logger.info(f"Task created with ID: {task_id}")
+            
+            # Poll for completion
+            t0 = time.time()
+            while time.time() - t0 < timeout_s:
+                try:
+                    query_payload = {"taskId": task_id}
+                    sr = await client.post(KIE_QUERY_URL, headers=headers, json=query_payload)
                     
-                    description = data.get("description") or data.get("data", {}).get("description") or ""
-                    request_id = data.get("request_id") or data.get("requestId") or data.get("request", {}).get("id") or "unknown"
+                    if sr.status_code >= 400:
+                        raise FalError(f"Kie.ai query failed: {sr.status_code} {sr.text}")
                     
-                    logger.info(f"Success with endpoint {endpoint}, result URL: {url}")
-                    return (url, description, request_id)
-                
-                # If no images, try polling
-                status_url = data.get("status_url") or data.get("request", {}).get("status_url")
-                if status_url:
-                    logger.info(f"Polling status URL: {status_url}")
-                    t0 = time.time()
-                    while time.time() - t0 < timeout_s:
-                        try:
-                            async with httpx.AsyncClient(timeout=30.0) as client:
-                                sr = await client.get(status_url, headers=headers)
-                                if sr.status_code >= 400:
-                                    last_error = f"Status check failed: {sr.status_code} {sr.text}"
-                                    break
-                                sd = sr.json()
-
-                                if on_progress:
-                                    for log in (sd.get("logs") or []):
-                                        msg = log.get("message")
-                                        if msg:
-                                            on_progress(msg)
-
-                                images = sd.get("images") or sd.get("data", {}).get("images") or []
+                    sd = sr.json()
+                    logger.info(f"Query response: {sd}")
+                    
+                    if sd.get("code") != 200:
+                        raise FalError(f"Kie.ai query error: {sd.get('message', 'Unknown error')}")
+                    
+                    task_data = sd.get("data", {})
+                    state = task_data.get("state")
+                    
+                    if state == "success":
+                        # Parse result
+                        result_json = task_data.get("resultJson")
+                        if result_json:
+                            result_data = json.loads(result_json)
+                            result_urls = result_data.get("resultUrls", [])
+                            
+                            if result_urls:
+                                url = result_urls[0]
+                                description = f"Generated by Nano Banana via Kie.ai"
+                                request_id = task_id
                                 
-                                if images:
-                                    url = images[0].get("url")
-                                    if not url:
-                                        last_error = f"Status response had no image url"
-                                        break
-                                    description = sd.get("description") or sd.get("data", {}).get("description") or description
-                                    request_id = sd.get("request_id") or sd.get("requestId") or sd.get("request", {}).get("id") or request_id
-                                    logger.info(f"Success with endpoint {endpoint} after polling, result URL: {url}")
-                                    return (url, description or "", request_id)
-
-                                time.sleep(1.0)
-                        except Exception as e:
-                            logger.error(f"Error polling status: {e}")
-                            last_error = f"Error polling status: {e}"
-                            break
-                    else:
-                        last_error = f"Endpoint {endpoint} polling timed out"
-                        continue
-                else:
-                    last_error = f"Endpoint {endpoint} did not return images or status_url"
-                    continue
+                                logger.info(f"Task completed successfully, result URL: {url}")
+                                return (url, description, request_id)
+                            else:
+                                raise FalError("No result URLs in successful response")
+                        else:
+                            raise FalError("No result JSON in successful response")
                     
-        except httpx.ConnectError as e:
-            logger.error(f"Connection error to {endpoint}: {e}")
-            last_error = f"Failed to connect to {endpoint}: {e}"
-            continue
-        except httpx.TimeoutException as e:
-            logger.error(f"Timeout error to {endpoint}: {e}")
-            last_error = f"Timeout connecting to {endpoint}: {e}"
-            continue
-        except Exception as e:
-            logger.error(f"Unexpected error with {endpoint}: {e}")
-            last_error = f"Unexpected error with {endpoint}: {e}"
-            continue
-
-    # If we get here, all endpoints failed
-    raise FalError(f"All FAL endpoints failed. Last error: {last_error}")
+                    elif state == "fail":
+                        fail_msg = task_data.get("failMsg", "Unknown error")
+                        raise FalError(f"Task failed: {fail_msg}")
+                    
+                    # Task still processing
+                    if on_progress:
+                        on_progress(f"Processing... (elapsed: {int(time.time() - t0)}s)")
+                    
+                    await asyncio.sleep(2.0)  # Wait 2 seconds before next poll
+                    
+                except Exception as e:
+                    logger.error(f"Error polling task status: {e}")
+                    raise FalError(f"Error polling task status: {e}")
+            
+            raise FalError("Task polling timed out")
+            
+    except httpx.ConnectError as e:
+        logger.error(f"Connection error to Kie.ai API: {e}")
+        raise FalError(f"Failed to connect to Kie.ai API: {e}")
+    except httpx.TimeoutException as e:
+        logger.error(f"Timeout error to Kie.ai API: {e}")
+        raise FalError(f"Timeout connecting to Kie.ai API: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error calling Kie.ai API: {e}")
+        raise FalError(f"Unexpected error: {e}")
