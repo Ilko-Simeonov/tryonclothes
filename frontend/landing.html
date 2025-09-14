@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Try-On Clothes - AI-Powered Virtual Try-On for E-commerce</title>
+    <meta name="description" content="Transform your e-commerce with AI-powered virtual try-on technology. Perfect for clothing and furniture stores. Easy integration, realistic results.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: #fff;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #007bff;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #007bff;
+        }
+
+        .cta-button {
+            background: #007bff;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.3s ease;
+        }
+
+        .cta-button:hover {
+            background: #0056b3;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8rem 0 4rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #007bff;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            padding: 1rem 2rem;
+            border: 2px solid white;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: #007bff;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 4rem 0;
+            background: #f8f9fa;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: #007bff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Use Cases Section */
+        .use-cases {
+            padding: 4rem 0;
+        }
+
+        .use-case {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            margin-bottom: 4rem;
+        }
+
+        .use-case:nth-child(even) {
+            direction: rtl;
+        }
+
+        .use-case:nth-child(even) > * {
+            direction: ltr;
+        }
+
+        .use-case-content h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .use-case-content p {
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .use-case-features {
+            list-style: none;
+        }
+
+        .use-case-features li {
+            padding: 0.5rem 0;
+            color: #666;
+        }
+
+        .use-case-features li::before {
+            content: "✓";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        .demo-container {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .demo-image {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background: #e9ecef;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Integration Section */
+        .integration {
+            padding: 4rem 0;
+            background: #f8f9fa;
+        }
+
+        .integration-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .step {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin: 0 auto 1rem;
+        }
+
+        .code-example {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+
+        .code-example .comment {
+            color: #6a9955;
+        }
+
+        .code-example .tag {
+            color: #569cd6;
+        }
+
+        .code-example .attr {
+            color: #9cdcfe;
+        }
+
+        .code-example .value {
+            color: #ce9178;
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 4rem 0;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+        }
+
+        .pricing-card.featured {
+            border: 2px solid #007bff;
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured::before {
+            content: "Most Popular";
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #007bff;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .price {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #007bff;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-period {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features li {
+            padding: 0.5rem 0;
+            color: #666;
+        }
+
+        .pricing-features li::before {
+            content: "✓";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: #333;
+            color: white;
+            padding: 3rem 0 1rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: #007bff;
+        }
+
+        .footer-section a {
+            color: #ccc;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid #555;
+            color: #ccc;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .use-case {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .use-case:nth-child(even) {
+                direction: ltr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav container">
+            <div class="logo">Try-On Clothes</div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#use-cases">Use Cases</a></li>
+                <li><a href="#integration">Integration</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+            </ul>
+            <a href="#integration" class="cta-button">Get Started</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>AI-Powered Virtual Try-On for E-commerce</h1>
+            <p>Transform your online store with realistic virtual try-on technology. Perfect for clothing, furniture, and more. Increase conversions and reduce returns.</p>
+            <div class="hero-buttons">
+                <a href="#integration" class="btn-primary">Start Free Trial</a>
+                <a href="#use-cases" class="btn-secondary">See Examples</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">Why Choose Try-On Clothes?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI-Powered</h3>
+                    <p>Advanced Nano Banana AI model provides realistic and accurate virtual try-on results with natural lighting and fabric drape.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightning Fast</h3>
+                    <p>Get results in under 30 seconds. Our optimized API ensures quick processing without compromising quality.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h3>Easy Integration</h3>
+                    <p>Simple HTML tag integration. No complex setup required. Works with any e-commerce platform.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Mobile Optimized</h3>
+                    <p>Responsive design that works perfectly on all devices. Your customers can try on items anywhere.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛒</div>
+                    <h3>Basket System</h3>
+                    <p>Multi-item try-on functionality. Customers can add multiple items to their basket and try them all at once.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Increase Sales</h3>
+                    <p>Studies show virtual try-on increases conversion rates by up to 40% and reduces return rates by 25%.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases Section -->
+    <section class="use-cases" id="use-cases">
+        <div class="container">
+            <h2 class="section-title">Perfect for Every E-commerce Business</h2>
+            
+            <!-- Clothing Use Case -->
+            <div class="use-case">
+                <div class="use-case-content">
+                    <h2>👕 Clothing & Fashion</h2>
+                    <p>Perfect for online clothing stores, fashion retailers, and apparel brands. Let customers see how clothes look on them before buying.</p>
+                    <ul class="use-case-features">
+                        <li>Try on shirts, dresses, jackets, and more</li>
+                        <li>Preserve customer's body shape and pose</li>
+                        <li>Realistic fabric drape and lighting</li>
+                        <li>Multi-item basket for outfit combinations</li>
+                        <li>Works with any clothing category</li>
+                    </ul>
+                </div>
+                <div class="demo-container">
+                    <div class="demo-image">
+                        <div>
+                            <strong>Clothing Demo</strong><br>
+                            Upload a photo of yourself<br>
+                            Try on different outfits<br>
+                            See realistic results
+                        </div>
+                    </div>
+                    <tryon-button 
+                        garment-url="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400" 
+                        garment-name="Blue Cotton Shirt" 
+                        garment-price="29.99"
+                        text="Try This Shirt">
+                    </tryon-button>
+                </div>
+            </div>
+
+            <!-- Furniture Use Case -->
+            <div class="use-case">
+                <div class="use-case-content">
+                    <h2>🛋️ Furniture & Home Decor</h2>
+                    <p>Ideal for furniture stores and home decor retailers. Let customers visualize how furniture fits in their space.</p>
+                    <ul class="use-case-features">
+                        <li>Upload photos of customer's room</li>
+                        <li>See how furniture fits the space</li>
+                        <li>Perfect for sofas, chairs, tables</li>
+                        <li>Realistic room integration</li>
+                        <li>Reduce furniture return rates</li>
+                    </ul>
+                </div>
+                <div class="demo-container">
+                    <div class="demo-image">
+                        <div>
+                            <strong>Furniture Demo</strong><br>
+                            Upload a photo of your room<br>
+                            Try different furniture pieces<br>
+                            See how they fit your space
+                        </div>
+                    </div>
+                    <tryon-button 
+                        garment-url="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400" 
+                        garment-name="Modern Sofa" 
+                        garment-price="899.99"
+                        text="Try This Sofa">
+                    </tryon-button>
+                </div>
+            </div>
+
+            <!-- Accessories Use Case -->
+            <div class="use-case">
+                <div class="use-case-content">
+                    <h2>👓 Accessories & Jewelry</h2>
+                    <p>Perfect for accessories, jewelry, glasses, and wearable items. Let customers see how accessories complement their look.</p>
+                    <ul class="use-case-features">
+                        <li>Try on glasses, jewelry, watches</li>
+                        <li>See how accessories match outfits</li>
+                        <li>Perfect for gift shopping</li>
+                        <li>Realistic material rendering</li>
+                        <li>Multiple item combinations</li>
+                    </ul>
+                </div>
+                <div class="demo-container">
+                    <div class="demo-image">
+                        <div>
+                            <strong>Accessories Demo</strong><br>
+                            Upload a photo of yourself<br>
+                            Try on glasses and jewelry<br>
+                            See the perfect match
+                        </div>
+                    </div>
+                    <tryon-button 
+                        garment-url="https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400" 
+                        garment-name="Designer Glasses" 
+                        garment-price="199.99"
+                        text="Try These Glasses">
+                    </tryon-button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integration Section -->
+    <section class="integration" id="integration">
+        <div class="container">
+            <h2 class="section-title">Easy Integration in 3 Steps</h2>
+            
+            <div class="integration-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Include the Script</h3>
+                    <p>Add our JavaScript widget to your website with a single line of code.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Add Try-On Buttons</h3>
+                    <p>Place try-on buttons next to your products using simple HTML tags.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Go Live</h3>
+                    <p>Your customers can now try on items virtually. No additional setup required!</p>
+                </div>
+            </div>
+
+            <h3 style="text-align: center; margin: 3rem 0 1rem; font-size: 1.5rem;">Integration Code Examples</h3>
+
+            <div class="code-example">
+<span class="comment">&lt;!-- Step 1: Include the Try-On Widget Script --&gt;</span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="value">"https://tryonclothes.onrender.com/frontend/tryon-widget.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
+
+<span class="comment">&lt;!-- Step 2: Add Try-On Buttons to Your Products --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="value">"product-card"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;img</span> <span class="attr">src</span>=<span class="value">"product-image.jpg"</span> <span class="attr">alt</span>=<span class="value">"Product"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;h3&gt;</span>Blue Cotton Shirt<span class="tag">&lt;/h3&gt;</span>
+  <span class="tag">&lt;p</span> <span class="attr">class</span>=<span class="value">"price"</span><span class="tag">&gt;</span>$29.99<span class="tag">&lt;/p&gt;</span>
+  
+  <span class="comment">&lt;!-- Try-On Button --&gt;</span>
+  <span class="tag">&lt;tryon-button</span>
+    <span class="attr">garment-url</span>=<span class="value">"https://yourstore.com/images/blue-shirt.jpg"</span>
+    <span class="attr">garment-name</span>=<span class="value">"Blue Cotton Shirt"</span>
+    <span class="attr">garment-price</span>=<span class="value">"29.99"</span>
+    <span class="attr">text</span>=<span class="value">"Try On"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;/tryon-button&gt;</span>
+  
+  <span class="tag">&lt;button</span> <span class="attr">class</span>=<span class="value">"add-to-cart"</span><span class="tag">&gt;</span>Add to Cart<span class="tag">&lt;/button&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+            </div>
+
+            <h3 style="text-align: center; margin: 2rem 0 1rem; font-size: 1.5rem;">Advanced Features</h3>
+
+            <div class="code-example">
+<span class="comment">&lt;!-- Multi-Item Basket System --&gt;</span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="value">"https://tryonclothes.onrender.com/frontend/basket-widget.html"</span><span class="tag">&gt;&lt;/script&gt;</span>
+
+<span class="comment">&lt;!-- Custom API Endpoint (Optional) --&gt;</span>
+<span class="tag">&lt;tryon-button</span>
+  <span class="attr">garment-url</span>=<span class="value">"product-image.jpg"</span>
+  <span class="attr">api-endpoint</span>=<span class="value">"https://your-api.com/tryon"</span>
+  <span class="attr">text</span>=<span class="value">"Virtual Try-On"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;/tryon-button&gt;</span>
+            </div>
+
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="#" class="btn-primary" style="display: inline-block; margin: 0 1rem;">Get API Key</a>
+                <a href="#" class="btn-secondary" style="display: inline-block; margin: 0 1rem;">View Documentation</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <h2 class="section-title">Simple, Transparent Pricing</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Starter</h3>
+                    <div class="price">$0.01</div>
+                    <div class="price-period">per try-on</div>
+                    <ul class="pricing-features">
+                        <li>Up to 1,000 try-ons/month</li>
+                        <li>Basic support</li>
+                        <li>Standard processing time</li>
+                        <li>Single item try-on</li>
+                    </ul>
+                    <a href="#" class="cta-button">Start Free Trial</a>
+                </div>
+                <div class="pricing-card featured">
+                    <h3>Professional</h3>
+                    <div class="price">$0.008</div>
+                    <div class="price-period">per try-on</div>
+                    <ul class="pricing-features">
+                        <li>Up to 10,000 try-ons/month</li>
+                        <li>Priority support</li>
+                        <li>Faster processing</li>
+                        <li>Multi-item basket</li>
+                        <li>Custom branding</li>
+                    </ul>
+                    <a href="#" class="cta-button">Get Started</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Enterprise</h3>
+                    <div class="price">Custom</div>
+                    <div class="price-period">contact us</div>
+                    <ul class="pricing-features">
+                        <li>Unlimited try-ons</li>
+                        <li>24/7 dedicated support</li>
+                        <li>Custom integration</li>
+                        <li>Advanced analytics</li>
+                        <li>SLA guarantee</li>
+                    </ul>
+                    <a href="#" class="cta-button">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Product</h3>
+                    <a href="#features">Features</a>
+                    <a href="#use-cases">Use Cases</a>
+                    <a href="#integration">Integration</a>
+                    <a href="#pricing">Pricing</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Resources</h3>
+                    <a href="#">Documentation</a>
+                    <a href="#">API Reference</a>
+                    <a href="#">Tutorials</a>
+                    <a href="#">Support</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Company</h3>
+                    <a href="#">About Us</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Contact</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Legal</h3>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Cookie Policy</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Try-On Clothes. All rights reserved. Powered by Nano Banana AI.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Include the Try-On Widget -->
+    <script src="https://tryonclothes.onrender.com/frontend/tryon-widget.js"></script>
+    
+    <!-- Smooth scrolling -->
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll effect to header
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+                header.style.backdropFilter = 'blur(10px)';
+            } else {
+                header.style.background = '#fff';
+                header.style.backdropFilter = 'none';
+            }
+        });
+    </script>
+</body>
+</html> 

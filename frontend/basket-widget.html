@@ -1,0 +1,124 @@
+<!-- Basket Widget for Try-On System -->
+<div id="tryon-basket-widget" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+  <button id="basket-toggle" style="display: none; background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 25px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    Basket (0)
+  </button>
+  
+  <div id="basket-panel" style="display: none; position: absolute; top: 60px; right: 0; width: 300px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); padding: 16px; max-height: 400px; overflow-y: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h3 style="margin: 0; font-size: 16px; color: #333;">Try-On Basket</h3>
+      <button id="clear-basket" style="background: none; border: none; color: #666; cursor: pointer; font-size: 12px;">Clear All</button>
+    </div>
+    
+    <div id="basket-items" style="display: flex; flex-direction: column; gap: 12px;">
+      <!-- Basket items will be added here -->
+    </div>
+    
+    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee;">
+      <button id="try-all-items" style="width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+        Try All Items
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Basket Widget JavaScript
+(function() {
+  const basketWidget = document.getElementById('tryon-basket-widget');
+  const basketToggle = document.getElementById('basket-toggle');
+  const basketPanel = document.getElementById('basket-panel');
+  const basketItems = document.getElementById('basket-items');
+  const clearBasket = document.getElementById('clear-basket');
+  const tryAllItems = document.getElementById('try-all-items');
+  
+  let isBasketOpen = false;
+  
+  // Initialize basket if it doesn't exist
+  if (!window.tryOnBasket) {
+    window.tryOnBasket = {
+      items: [],
+      addItem: function(item) {
+        if (!this.items.find(i => i.url === item.url)) {
+          this.items.push(item);
+          this.updateUI();
+        }
+      },
+      removeItem: function(url) {
+        this.items = this.items.filter(i => i.url !== url);
+        this.updateUI();
+      },
+      clear: function() {
+        this.items = [];
+        this.updateUI();
+      },
+      updateUI: function() {
+        updateBasketUI();
+      }
+    };
+  }
+  
+  function updateBasketUI() {
+    const count = window.tryOnBasket.items.length;
+    basketToggle.textContent = count > 0 ? `Basket (${count})` : 'Basket';
+    basketToggle.style.display = count > 0 ? 'block' : 'none';
+    
+    // Update basket items
+    basketItems.innerHTML = '';
+    window.tryOnBasket.items.forEach(item => {
+      const itemDiv = document.createElement('div');
+      itemDiv.style.cssText = 'display: flex; align-items: center; gap: 12px; padding: 8px; border: 1px solid #eee; border-radius: 8px;';
+      itemDiv.innerHTML = `
+        <img src="${item.image}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;" alt="${item.name}">
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-size: 12px; font-weight: 600; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.name}</div>
+          ${item.price ? `<div style="font-size: 11px; color: #007bff;">$${item.price}</div>` : ''}
+        </div>
+        <button onclick="window.tryOnBasket.removeItem('${item.url}')" style="background: none; border: none; color: #dc3545; cursor: pointer; font-size: 16px; padding: 4px;">×</button>
+      `;
+      basketItems.appendChild(itemDiv);
+    });
+    
+    tryAllItems.disabled = count === 0;
+  }
+  
+  // Event listeners
+  basketToggle.addEventListener('click', () => {
+    isBasketOpen = !isBasketOpen;
+    basketPanel.style.display = isBasketOpen ? 'block' : 'none';
+  });
+  
+  clearBasket.addEventListener('click', () => {
+    window.tryOnBasket.clear();
+  });
+  
+  tryAllItems.addEventListener('click', () => {
+    if (window.tryOnBasket.items.length === 0) return;
+    
+    // Create a temporary try-on button to handle multiple items
+    const tempButton = document.createElement('tryon-button');
+    tempButton.setAttribute('garment-url', window.tryOnBasket.items[0].url);
+    tempButton.setAttribute('garment-name', window.tryOnBasket.items[0].name);
+    document.body.appendChild(tempButton);
+    
+    // Trigger the try-on dialog
+    tempButton.shadowRoot.querySelector('button').click();
+    
+    // Clean up
+    setTimeout(() => {
+      document.body.removeChild(tempButton);
+    }, 100);
+  });
+  
+  // Close basket when clicking outside
+  document.addEventListener('click', (e) => {
+    if (isBasketOpen && !basketWidget.contains(e.target)) {
+      isBasketOpen = false;
+      basketPanel.style.display = 'none';
+    }
+  });
+  
+  // Initialize UI
+  updateBasketUI();
+})();
+</script> 
