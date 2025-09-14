@@ -29,8 +29,8 @@ from backend.providers.fal_nanobanana import try_on_with_fal_nanobanana, FalErro
 
 class Settings(BaseSettings):
     PORT: int = 8787
-    PUBLIC_BASE_URL: str = "http://localhost:8787"
-    ALLOWED_ORIGINS: str = ""
+    PUBLIC_BASE_URL: str = "https://tryonclothes.onrender.com"
+    ALLOWED_ORIGINS: str = "https://sparkvision.tech"
     FAL_KEY: str = ""
     MAX_UPLOAD_MB: int = 10
     DELETE_AFTER_MINUTES: int = 60
@@ -45,18 +45,22 @@ settings = Settings()
 
 app = FastAPI(title="NanoBanana Try-On (FastAPI)")
 
+# Add CORS middleware FIRST to handle preflight requests properly
+origins = [o.strip() for o in settings.ALLOWED_ORIGINS.split(",") if o.strip()]
+if not origins:
+    origins = ["*"]  # Fallback to allow all origins
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
+
 # Add security middleware for proper HTTPS handling behind Render's proxy
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
 app.add_middleware(HTTPSRedirectMiddleware)
-
-origins = [o.strip() for o in settings.ALLOWED_ORIGINS.split(",") if o.strip()]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins if origins else ["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["20/minute"])
 app.state.limiter = limiter
