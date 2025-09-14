@@ -258,9 +258,9 @@ async def api_tryon(
     try:
         logger.info(f"Try-on request from {request.client.host if request.client else 'unknown'}")
         
-        # Check if FAL_KEY is configured
-        if not settings.FAL_KEY:
-            logger.error("FAL_KEY not configured")
+        # Check if KIE_API_KEY is configured
+        if not settings.KIE_API_KEY:
+            logger.error("KIE_API_KEY not configured")
             raise HTTPException(status_code=500, detail="Service not properly configured")
         
         # Validate file size (FastAPI streams, but we can rely on server/client limits)

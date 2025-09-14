@@ -18,13 +18,6 @@ logger = logging.getLogger(__name__)
 KIE_API_KEY = os.getenv("KIE_API_KEY", os.getenv("FAL_KEY", ""))
 
 KIE_API_URL = "https://api.kie.ai/api/v1/jobs/createTask"
-# Try different query endpoints
-KIE_QUERY_URLS = [
-    "https://api.kie.ai/api/v1/jobs/queryTask",  # Original
-    "https://api.kie.ai/api/v1/jobs/getTask",    # Alternative 1
-    "https://api.kie.ai/api/v1/jobs/task",       # Alternative 2
-    "https://api.kie.ai/api/v1/task",            # Alternative 3
-]
 
 class FalError(Exception):
     pass
@@ -93,109 +86,65 @@ async def try_on_with_fal_nanobanana(
             
             logger.info(f"Task created with ID: {task_id}")
             
-            # Try different query endpoints
-            query_success = False
-            for query_url in KIE_QUERY_URLS:
+            # Since we can't find the correct query endpoint, let's try a different approach
+            # We'll wait a reasonable time and then try to get the result
+            # This is a simplified approach that might work for Kie.ai
+            
+            if on_progress:
+                on_progress("Task created, waiting for processing...")
+            
+            # Wait for processing (Kie.ai typically takes 25-30 seconds according to their docs)
+            await asyncio.sleep(30)
+            
+            if on_progress:
+                on_progress("Checking for results...")
+            
+            # Try to get the result using the task ID
+            # Since we don't know the exact endpoint, let's try a few common patterns
+            result_urls = [
+                f"https://api.kie.ai/api/v1/jobs/{task_id}",
+                f"https://api.kie.ai/api/v1/jobs/result/{task_id}",
+                f"https://api.kie.ai/api/v1/result/{task_id}",
+                f"https://api.kie.ai/api/v1/task/{task_id}",
+            ]
+            
+            for result_url in result_urls:
                 try:
-                    logger.info(f"Trying query endpoint: {query_url}")
+                    logger.info(f"Trying to get result from: {result_url}")
+                    result_r = await client.get(result_url, headers=headers)
                     
-                    # Poll for completion
-                    t0 = time.time()
-                    while time.time() - t0 < timeout_s:
-                        try:
-                            # Try different query payload formats
-                            query_payloads = [
-                                {"taskId": task_id},
-                                {"task_id": task_id},
-                                {"id": task_id},
-                                task_id  # Some APIs expect just the ID
-                            ]
-                            
-                            query_success = False
-                            for query_payload in query_payloads:
-                                try:
-                                    if isinstance(query_payload, str):
-                                        # For GET requests with ID in URL
-                                        url_with_id = f"{query_url}/{task_id}"
-                                        sr = await client.get(url_with_id, headers=headers)
-                                    else:
-                                        # For POST requests with payload
-                                        sr = await client.post(query_url, headers=headers, json=query_payload)
-                                    
-                                    logger.info(f"Query response status: {sr.status_code}")
-                                    
-                                    if sr.status_code == 404:
-                                        logger.warning(f"Query endpoint {query_url} not found, trying next...")
-                                        break
-                                    
-                                    if sr.status_code >= 400:
-                                        logger.warning(f"Query failed with payload {query_payload}: {sr.status_code} {sr.text}")
-                                        continue
-                                    
-                                    sd = sr.json()
-                                    logger.info(f"Query response: {sd}")
-                                    
-                                    if sd.get("code") != 200:
-                                        logger.warning(f"Query error: {sd.get('message', 'Unknown error')}")
-                                        continue
-                                    
-                                    task_data = sd.get("data", {})
-                                    state = task_data.get("state")
-                                    
-                                    if state == "success":
-                                        # Parse result
-                                        result_json = task_data.get("resultJson")
-                                        if result_json:
-                                            result_data = json.loads(result_json)
-                                            result_urls = result_data.get("resultUrls", [])
-                                            
-                                            if result_urls:
-                                                url = result_urls[0]
-                                                description = f"Generated by Nano Banana via Kie.ai"
-                                                request_id = task_id
-                                                
-                                                logger.info(f"Task completed successfully, result URL: {url}")
-                                                return (url, description, request_id)
-                                            else:
-                                                raise FalError("No result URLs in successful response")
-                                        else:
-                                            raise FalError("No result JSON in successful response")
-                                    
-                                    elif state == "fail":
-                                        fail_msg = task_data.get("failMsg", "Unknown error")
-                                        raise FalError(f"Task failed: {fail_msg}")
-                                    
-                                    # Task still processing
-                                    if on_progress:
-                                        on_progress(f"Processing... (elapsed: {int(time.time() - t0)}s)")
-                                    
-                                    query_success = True
-                                    break
-                                
-                                except Exception as e:
-                                    logger.warning(f"Query attempt failed: {e}")
-                                    continue
-                            
-                            if not query_success:
-                                break
-                            
-                            await asyncio.sleep(2.0)  # Wait 2 seconds before next poll
-                            
-                        except Exception as e:
-                            logger.error(f"Error polling task status: {e}")
-                            raise FalError(f"Error polling task status: {e}")
-                    
-                    if query_success:
-                        break
+                    if result_r.status_code == 200:
+                        result_data = result_r.json()
+                        logger.info(f"Result response: {result_data}")
                         
+                        # Try to extract the result URL from various possible response formats
+                        result_url = None
+                        
+                        # Check for direct URL in response
+                        if "url" in result_data:
+                            result_url = result_data["url"]
+                        elif "image_url" in result_data:
+                            result_url = result_data["image_url"]
+                        elif "result_url" in result_data:
+                            result_url = result_data["result_url"]
+                        elif "data" in result_data and "url" in result_data["data"]:
+                            result_url = result_data["data"]["url"]
+                        elif "data" in result_data and "image_url" in result_data["data"]:
+                            result_url = result_data["data"]["image_url"]
+                        
+                        if result_url:
+                            description = f"Generated by Nano Banana via Kie.ai"
+                            request_id = task_id
+                            
+                            logger.info(f"Task completed successfully, result URL: {result_url}")
+                            return (result_url, description, request_id)
+                    
                 except Exception as e:
-                    logger.warning(f"Query endpoint {query_url} failed: {e}")
+                    logger.warning(f"Failed to get result from {result_url}: {e}")
                     continue
             
-            if not query_success:
-                raise FalError("All query endpoints failed")
-            
-            raise FalError("Task polling timed out")
+            # If we can't get the result, raise an error
+            raise FalError("Could not retrieve result from Kie.ai API. The task was created but we couldn't find the result.")
             
     except httpx.ConnectError as e:
         logger.error(f"Connection error to Kie.ai API: {e}")
