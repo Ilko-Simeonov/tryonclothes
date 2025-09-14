@@ -248,25 +248,74 @@
             margin-right: 0.5rem;
         }
 
-        .demo-container {
+        /* Product Simulation Styles */
+        .product-simulation {
             background: #f8f9fa;
             padding: 2rem;
             border-radius: 12px;
             text-align: center;
         }
 
-        .demo-image {
-            width: 100%;
-            max-width: 400px;
-            height: 300px;
-            background: #e9ecef;
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .product-card {
+            background: white;
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-            color: #666;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .product-card.selected {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-name {
             font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: #333;
+        }
+
+        .product-price {
+            font-size: 0.8rem;
+            color: #007bff;
+            font-weight: 600;
+        }
+
+        .demo-instructions {
+            background: #e3f2fd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #1565c0;
+        }
+
+        .demo-instructions strong {
+            display: block;
+            margin-bottom: 0.5rem;
         }
 
         /* Integration Section */
@@ -465,6 +514,10 @@
                 flex-direction: column;
                 align-items: center;
             }
+
+            .product-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
         }
     </style>
 </head>
@@ -552,20 +605,34 @@
                         <li>Works with any clothing category</li>
                     </ul>
                 </div>
-                <div class="demo-container">
-                    <div class="demo-image">
-                        <div>
-                            <strong>Clothing Demo</strong><br>
-                            Upload a photo of yourself<br>
-                            Try on different outfits<br>
-                            See realistic results
+                <div class="product-simulation">
+                    <div class="demo-instructions">
+                        <strong>Try It Yourself:</strong>
+                        Click on any product below, then upload your photo to see how it looks on you!
+                    </div>
+                    <div class="product-grid">
+                        <div class="product-card" data-product="shirt">
+                            <img src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=300&fit=crop" alt="Blue Cotton Shirt" class="product-image">
+                            <div class="product-name">Blue Cotton Shirt</div>
+                            <div class="product-price">$29.99</div>
+                        </div>
+                        <div class="product-card" data-product="dress">
+                            <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=300&h=300&fit=crop" alt="Summer Dress" class="product-image">
+                            <div class="product-name">Summer Dress</div>
+                            <div class="product-price">$49.99</div>
+                        </div>
+                        <div class="product-card" data-product="jacket">
+                            <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&h=300&fit=crop" alt="Denim Jacket" class="product-image">
+                            <div class="product-name">Denim Jacket</div>
+                            <div class="product-price">$79.99</div>
                         </div>
                     </div>
                     <tryon-button 
+                        id="clothing-tryon"
                         garment-url="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400" 
                         garment-name="Blue Cotton Shirt" 
                         garment-price="29.99"
-                        text="Try This Shirt">
+                        text="Try This Item">
                     </tryon-button>
                 </div>
             </div>
@@ -583,20 +650,34 @@
                         <li>Reduce furniture return rates</li>
                     </ul>
                 </div>
-                <div class="demo-container">
-                    <div class="demo-image">
-                        <div>
-                            <strong>Furniture Demo</strong><br>
-                            Upload a photo of your room<br>
-                            Try different furniture pieces<br>
-                            See how they fit your space
+                <div class="product-simulation">
+                    <div class="demo-instructions">
+                        <strong>Visualize in Your Space:</strong>
+                        Select a furniture piece, then upload a photo of your room to see how it fits!
+                    </div>
+                    <div class="product-grid">
+                        <div class="product-card" data-product="sofa">
+                            <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=300&h=300&fit=crop" alt="Modern Sofa" class="product-image">
+                            <div class="product-name">Modern Sofa</div>
+                            <div class="product-price">$899.99</div>
+                        </div>
+                        <div class="product-card" data-product="chair">
+                            <img src="https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=300&h=300&fit=crop" alt="Accent Chair" class="product-image">
+                            <div class="product-name">Accent Chair</div>
+                            <div class="product-price">$299.99</div>
+                        </div>
+                        <div class="product-card" data-product="table">
+                            <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=300&h=300&fit=crop" alt="Coffee Table" class="product-image">
+                            <div class="product-name">Coffee Table</div>
+                            <div class="product-price">$199.99</div>
                         </div>
                     </div>
                     <tryon-button 
+                        id="furniture-tryon"
                         garment-url="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400" 
                         garment-name="Modern Sofa" 
                         garment-price="899.99"
-                        text="Try This Sofa">
+                        text="Try This Furniture">
                     </tryon-button>
                 </div>
             </div>
@@ -614,20 +695,34 @@
                         <li>Multiple item combinations</li>
                     </ul>
                 </div>
-                <div class="demo-container">
-                    <div class="demo-image">
-                        <div>
-                            <strong>Accessories Demo</strong><br>
-                            Upload a photo of yourself<br>
-                            Try on glasses and jewelry<br>
-                            See the perfect match
+                <div class="product-simulation">
+                    <div class="demo-instructions">
+                        <strong>Find Your Perfect Match:</strong>
+                        Choose an accessory and upload your photo to see how it complements your style!
+                    </div>
+                    <div class="product-grid">
+                        <div class="product-card" data-product="glasses">
+                            <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=300&h=300&fit=crop" alt="Designer Glasses" class="product-image">
+                            <div class="product-name">Designer Glasses</div>
+                            <div class="product-price">$199.99</div>
+                        </div>
+                        <div class="product-card" data-product="watch">
+                            <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop" alt="Luxury Watch" class="product-image">
+                            <div class="product-name">Luxury Watch</div>
+                            <div class="product-price">$599.99</div>
+                        </div>
+                        <div class="product-card" data-product="necklace">
+                            <img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=300&h=300&fit=crop" alt="Gold Necklace" class="product-image">
+                            <div class="product-name">Gold Necklace</div>
+                            <div class="product-price">$149.99</div>
                         </div>
                     </div>
                     <tryon-button 
+                        id="accessories-tryon"
                         garment-url="https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400" 
                         garment-name="Designer Glasses" 
                         garment-price="199.99"
-                        text="Try These Glasses">
+                        text="Try This Accessory">
                     </tryon-button>
                 </div>
             </div>
@@ -790,8 +885,136 @@
     <!-- Include the Try-On Widget -->
     <script src="https://tryonclothes.onrender.com/frontend/tryon-widget.js"></script>
     
-    <!-- Smooth scrolling -->
+    <!-- Product Selection and Try-On Logic -->
     <script>
+        // Product data for each category
+        const productData = {
+            clothing: {
+                shirt: {
+                    url: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400",
+                    name: "Blue Cotton Shirt",
+                    price: "29.99"
+                },
+                dress: {
+                    url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400",
+                    name: "Summer Dress",
+                    price: "49.99"
+                },
+                jacket: {
+                    url: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400",
+                    name: "Denim Jacket",
+                    price: "79.99"
+                }
+            },
+            furniture: {
+                sofa: {
+                    url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400",
+                    name: "Modern Sofa",
+                    price: "899.99"
+                },
+                chair: {
+                    url: "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400",
+                    name: "Accent Chair",
+                    price: "299.99"
+                },
+                table: {
+                    url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400",
+                    name: "Coffee Table",
+                    price: "199.99"
+                }
+            },
+            accessories: {
+                glasses: {
+                    url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400",
+                    name: "Designer Glasses",
+                    price: "199.99"
+                },
+                watch: {
+                    url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
+                    name: "Luxury Watch",
+                    price: "599.99"
+                },
+                necklace: {
+                    url: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400",
+                    name: "Gold Necklace",
+                    price: "149.99"
+                }
+            }
+        };
+
+        // Initialize product selection
+        function initializeProductSelection() {
+            // Clothing products
+            const clothingProducts = document.querySelectorAll('.use-case:nth-child(1) .product-card');
+            const clothingTryon = document.getElementById('clothing-tryon');
+            
+            clothingProducts.forEach(card => {
+                card.addEventListener('click', () => {
+                    // Remove selected class from all cards in this section
+                    clothingProducts.forEach(c => c.classList.remove('selected'));
+                    // Add selected class to clicked card
+                    card.classList.add('selected');
+                    
+                    // Update try-on button
+                    const productType = card.dataset.product;
+                    const product = productData.clothing[productType];
+                    updateTryOnButton(clothingTryon, product);
+                });
+            });
+
+            // Furniture products
+            const furnitureProducts = document.querySelectorAll('.use-case:nth-child(2) .product-card');
+            const furnitureTryon = document.getElementById('furniture-tryon');
+            
+            furnitureProducts.forEach(card => {
+                card.addEventListener('click', () => {
+                    furnitureProducts.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    
+                    const productType = card.dataset.product;
+                    const product = productData.furniture[productType];
+                    updateTryOnButton(furnitureTryon, product);
+                });
+            });
+
+            // Accessories products
+            const accessoriesProducts = document.querySelectorAll('.use-case:nth-child(3) .product-card');
+            const accessoriesTryon = document.getElementById('accessories-tryon');
+            
+            accessoriesProducts.forEach(card => {
+                card.addEventListener('click', () => {
+                    accessoriesProducts.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    
+                    const productType = card.dataset.product;
+                    const product = productData.accessories[productType];
+                    updateTryOnButton(accessoriesTryon, product);
+                });
+            });
+        }
+
+        // Update try-on button with selected product
+        function updateTryOnButton(button, product) {
+            button.setAttribute('garment-url', product.url);
+            button.setAttribute('garment-name', product.name);
+            button.setAttribute('garment-price', product.price);
+            
+            // Update button text based on category
+            if (product.name.includes('Sofa') || product.name.includes('Chair') || product.name.includes('Table')) {
+                button.setAttribute('text', 'Try This Furniture');
+            } else if (product.name.includes('Glasses') || product.name.includes('Watch') || product.name.includes('Necklace')) {
+                button.setAttribute('text', 'Try This Accessory');
+            } else {
+                button.setAttribute('text', 'Try This Item');
+            }
+            
+            // Refresh the button if the method exists
+            if (button._refresh && typeof button._refresh === 'function') {
+                button._refresh();
+            }
+        }
+
+        // Smooth scrolling
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -815,6 +1038,46 @@
                 header.style.background = '#fff';
                 header.style.backdropFilter = 'none';
             }
+        });
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded');
+            
+            // Check if custom elements are defined
+            console.log('Custom elements defined:', customElements.get('tryon-button'));
+            
+            // Wait a bit for custom elements to be defined
+            setTimeout(() => {
+                console.log('Initializing product selection...');
+                
+                // Check if try-on buttons exist
+                const tryonButtons = document.querySelectorAll('tryon-button');
+                console.log('Found try-on buttons:', tryonButtons.length);
+                
+                tryonButtons.forEach((btn, index) => {
+                    console.log(`Button ${index}:`, btn);
+                    console.log(`Button ${index} shadowRoot:`, btn.shadowRoot);
+                });
+                
+                initializeProductSelection();
+                
+                // Set default selections
+                const shirtCard = document.querySelector('.use-case:nth-child(1) .product-card[data-product="shirt"]');
+                const sofaCard = document.querySelector('.use-case:nth-child(2) .product-card[data-product="sofa"]');
+                const glassesCard = document.querySelector('.use-case:nth-child(3) .product-card[data-product="glasses"]');
+                
+                if (shirtCard) shirtCard.classList.add('selected');
+                if (sofaCard) sofaCard.classList.add('selected');
+                if (glassesCard) glassesCard.classList.add('selected');
+                
+                // Force refresh all try-on buttons
+                tryonButtons.forEach(btn => {
+                    if (btn._refresh && typeof btn._refresh === 'function') {
+                        btn._refresh();
+                    }
+                });
+            }, 500); // Increased timeout
         });
     </script>
 </body>
