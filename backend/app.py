@@ -137,6 +137,7 @@ async def _startup():
     asyncio.create_task(_ttl_cleaner())
     # Log configuration status
     logger.info(f"FAL_KEY configured: {bool(settings.FAL_KEY)}")
+    logger.info(f"KIE_API_KEY configured: {bool(settings.KIE_API_KEY)}")
     logger.info(f"Allowed origins: {origins}")
 
 # Serve tmp files (publicly fetchable by FAL)
@@ -155,6 +156,7 @@ def health():
     return {
         "ok": True,
         "fal_configured": bool(settings.FAL_KEY),
+        "kie_configured": bool(settings.KIE_API_KEY),
         "allowed_origins": origins
     }
 
